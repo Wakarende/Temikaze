@@ -183,6 +183,8 @@ Uppercase for wordmark and major section headings
 
 Tight tracking
 
+Barlow Condensed 900 is visually less extremely condensed than Druk (the reference display face). Final wordmark and section-heading letter-spacing and sizing must be visually tuned against the reference screenshots during implementation — do not treat the tracking values in the typography token table below as final without that visual verification. Font family does not change.
+
 UI / Body
 
 Inter
@@ -353,6 +355,24 @@ Inter
 
 Uppercase
 
+Eyebrow / Status Label
+
+Newsreader
+
+0.85rem
+
+0.8rem
+
+400 italic
+
+1.1
+
+normal
+
+Sentence case / lowercase per content
+
+Used for dot-prefixed category/status labels (e.g. "Latest Release", "Latest Blog", "Latest Fiction"). Does not replace ordinary dates or technical metadata — those remain the Inter Metadata role above.
+
 Button
 
 Inter
@@ -367,7 +387,7 @@ Inter
 
 +0.03em
 
-Uppercase
+Lowercase (reference-derived; do not force text-transform: uppercase on buttons, pills, or small action links)
 
 Wordmark
 
@@ -627,23 +647,33 @@ do not show a past event as “Next Event,”
 
 either omit that card or render the layout cleanly with the remaining status cards.
 
+Header audio control
+
+The reference site's header includes a persistent circular audio-state toggle icon.
+
+Temikaze has no equivalent sitewide audio-control feature.
+
+Do not reproduce that icon, functionally or decoratively.
+
+Do not add a placeholder/nonfunctional icon in its place.
+
 Desktop layout
 
-Working target:
+Working target (corrected against reference screenshots — see docs/DECISIONS.md):
 
 full-width hero
 
 minimum approximately 100vh
 
-asymmetric two-column grid, approximately 42% / 58%
+full-width identity/text band near the top of the hero: oversized TEMIKAZE wordmark plus supporting serif tagline/content positioned within that same editorial band, not in a separate side column
 
-large identity content left
-
-performance image right
+full-width landscape performance image directly beneath the identity/text band — the image is a stacked band under the text, not a right-hand column beside it
 
 hero image approximately 80vh, object-fit: cover
 
-dark status-card stack visually layered over the hero
+dark status-card stack floats over the upper-left portion of the hero image
+
+header remains fixed above this entire composition
 
 solid cream header with dotted lower divider
 
@@ -669,11 +699,21 @@ Background:
 
 --card-dark
 
+Corners:
+
+small/subtle corner radius (not sharp rectangle, not full pill)
+
+exact radius value not yet locked; visually tune against reference screenshots during Hero implementation (Phase 5)
+
 Text:
 
 white primary
 
 muted light secondary
+
+Eyebrow/status label text (e.g. "Latest Release", "Latest Blog"):
+
+uses the Eyebrow / Status Label typography role (Newsreader 400 italic, sentence case per content — see Section 5)
 
 Status marker dots:
 
@@ -951,9 +991,9 @@ large PRACTICE / PRACTICE & IDENTITY heading
 
 approximately 50/50 editorial grid
 
-left side: primary DJ block
+left side: primary DJ block, center-aligned (heading, body copy, and any CTA), following the reference's center-aligned featured Written block
 
-right side:
+right side (unchanged):
 
 Producer block
 
@@ -1051,7 +1091,7 @@ large active center item
 
 smaller flanking inactive items
 
-black floating Prev/Next control pill
+two separate, adjacent solid-black pill buttons: prev and next (not one combined control pill)
 
 Active:
 
