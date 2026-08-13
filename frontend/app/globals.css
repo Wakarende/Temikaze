@@ -1,3 +1,97 @@
+:root {
+  /* Color tokens — locked, see docs/MASTER_SPEC.md Section 6 */
+  --background: #F2F0E9;
+  --background-dark: #0D0D0D;
+
+  --foreground: #111111;
+  --foreground-muted: #666666;
+  --foreground-light: #FFFFFF;
+  --foreground-light-muted: #A0A0A0;
+
+  --rule: #888888;
+  --card-border: #262626;
+  --card-dark: #121212;
+  --button-border: #111111;
+
+  /* Hero status markers only — do not reuse elsewhere */
+  --status-dot-red: #E53E3E;
+  --status-dot-blue: #4C51BF;
+  --status-dot-green: #38A169;
+
+  /* Functional states */
+  --focus-light: #111111;
+  --focus-dark: #FFFFFF;
+  --error: #E53E3E;
+
+  /* Dotted-rule divider, see MASTER_SPEC.md Section 7/8 */
+  --divider: 1px dotted var(--rule);
+
+  /* Layout, see MASTER_SPEC.md Section 8 */
+  --content-max-width: 1440px;
+  --gutter: clamp(1.5rem, 4vw, 4rem);
+  --header-height: 70px;
+  --section-spacing: clamp(4rem, 8vw, 8rem);
+
+  /* Typography scale (desktop values), see MASTER_SPEC.md Section 5 */
+  --text-hero: clamp(3.5rem, 12vw, 11rem);
+  --text-h2: clamp(2.5rem, 6vw, 5rem);
+  --text-h3: clamp(1.5rem, 2.5vw, 2.2rem);
+  --text-body: 1rem;
+  --text-body-sm: 0.875rem;
+  --text-ui-label: 0.9rem;
+  --text-metadata: 0.8rem;
+  --text-eyebrow: 0.85rem;
+  --text-button: 0.85rem;
+
+  --weight-hero: 900;
+  --weight-h2: 900;
+  --weight-h3: 600;
+  --weight-body: 400;
+  --weight-ui-label: 600;
+  --weight-metadata: 500;
+  --weight-eyebrow: 400;
+  --weight-button: 600;
+
+  --leading-hero: 0.85;
+  --leading-h2: 0.95;
+  --leading-h3: 1.2;
+  --leading-body: 1.65;
+  --leading-body-sm: 1.5;
+  --leading-ui-label: 1;
+  --leading-metadata: 1;
+  --leading-eyebrow: 1.1;
+  --leading-button: 1;
+
+  --tracking-hero: -0.02em;
+  --tracking-h2: -0.01em;
+  --tracking-metadata: 0.05em;
+  --tracking-button: 0.03em;
+
+  --style-eyebrow: italic;
+}
+
+/* Mobile breakpoint per MASTER_SPEC.md Section 8 (<768px) */
+@media (max-width: 767px) {
+  :root {
+    --text-hero: clamp(3rem, 14vw, 5rem);
+    --text-h2: clamp(2rem, 8vw, 3.2rem);
+    --text-h3: clamp(1.2rem, 4vw, 1.6rem);
+    --text-body: 0.95rem;
+    --text-body-sm: 0.825rem;
+    --text-ui-label: 0.85rem;
+    --text-metadata: 0.75rem;
+    --text-eyebrow: 0.8rem;
+    --text-button: 0.8rem;
+    --section-spacing: clamp(3rem, 6vw, 5rem);
+  }
+}
+
+/*
+ * Card corner radius is intentionally not tokenized yet.
+ * docs/DECISIONS.md "Hero card corner radius": small/subtle, exact value
+ * deferred to visual tuning during Phase 5 Hero implementation.
+ */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,4 +103,20 @@ body {
   height: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-light);
+  outline-offset: 2px;
 }

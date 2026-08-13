@@ -4,9 +4,9 @@ Last updated: 2026-08-13
 
 Current state
 
-Implementation status: Phase 1 complete.
+Implementation status: Phase 2 complete.
 
-Current approved phase: Phase 1 done → next is Phase 2 (not yet approved to begin).
+Current approved phase: Phase 2 done → next is Phase 3 (not yet approved to begin).
 
 What is already done
 
@@ -44,7 +44,7 @@ Phase checklist
 
 Phase 1 — Next.js Project Setup — Complete (2026-08-13)
 
-Phase 2 — Verify Typography & Design Tokens
+Phase 2 — Verify Typography & Design Tokens — Complete (2026-08-13)
 
 Phase 3 — WordPress Content Types & Sample Data
 
@@ -124,7 +124,43 @@ Re-ran npm run lint and npm run build from /frontend after cleanup: both passed 
 
 git status after cleanup: docs/PROGRESS.md modified (this update); frontend/ untracked (not yet committed, as expected). No unexpected files present.
 
-Next approved phase: Phase 2 — Verify Reference Typography & Design Tokens. Not started; awaiting explicit approval per working method.
+Phase 2 log — Verify Typography & Design Tokens (2026-08-13)
+
+Status: Complete.
+
+What changed:
+
+Created app/fonts.ts — next/font/google configuration for the three locked font families: Barlow Condensed (weight 900 only, --font-display), Inter (weights 400/500/600, --font-sans), Newsreader (weights 400/600, normal + italic style, --font-serif).
+
+Updated app/layout.tsx to apply the three font variable classes to the `<html>` element, making --font-display/--font-sans/--font-serif available globally.
+
+Rewrote app/globals.css to add: the locked color tokens verbatim from MASTER_SPEC.md Section 6 (background/foreground/rule/card/status-dot/focus/error — no invented colors); a --divider token (1px dotted var(--rule)); locked layout tokens from Section 8 (--content-max-width, --gutter, --header-height, --section-spacing); a full typography scale (one CSS variable per role — hero, h2, h3, body, body-sm, ui-label, metadata, eyebrow, button — covering size, weight, line-height, and tracking where the token table specifies non-normal tracking), with mobile-breakpoint overrides (<768px) applied by reassigning the same variable names rather than introducing separate mobile-suffixed variables; a basic reset/base-style block (box-sizing, body background/color/font-family, link color inheritance, :focus-visible outline using --focus-light).
+
+Card corner-radius was deliberately left un-tokenized, per the standing "Hero card corner radius" decision (small/subtle, exact value deferred to Phase 5) — documented with a comment in globals.css rather than inventing a pixel value.
+
+Created a temporary verification route at app/style-check/ (page.tsx + page.module.css), isolated from app/page.tsx, rendering: the TEMIKAZE wordmark at actual hero scale/weight/tracking (Barlow Condensed 900), Newsreader 400 and 600-italic samples, Inter 400 and 600 samples, the cream background/near-black text (inherited from body), a dotted divider, a dark card using --card-dark/--card-border/--foreground-light, and an outlined pill button that inverts to solid black/white on hover and :focus-visible. The page carries an explicit "temporary, remove before Phase 4" notice.
+
+app/page.tsx was not modified — still the Phase 1 minimal placeholder; it now inherits the new global background/foreground/font-family automatically via the cascade.
+
+No new dependencies were installed — next/font/google ships inside the already-installed next package.
+
+Tests/checks run:
+
+npm run lint — passed, no errors or warnings (run twice: once after initial implementation, once after the final content tweak to the style-check wordmark sample).
+
+npm run build — succeeded both times; compiled, typechecked, and statically generated /, /_not-found, and /style-check.
+
+Visual verification: started the dev server and captured headless-Chrome screenshots of /style-check (default state, a :focus-visible state via a temporarily-added autoFocus prop that was reverted immediately after capture, and a final full-page state at 1440px width). Screenshots were viewed directly and compared against references/screenshots/.
+
+Visually verified against references/screenshots/: Barlow Condensed 900 renders bold/condensed/uppercase and, at hero scale with the locked -0.02em tracking, sits about as tight as the reference "RADICAL.FACE" wordmark — no tracking change was needed. Newsreader renders correctly in both regular and 600-italic (confirms italic support for the new Eyebrow/Status Label role). Inter renders correctly at 400 and 600. Background renders as the locked cream (--background: #F2F0E9) and text as near-black (--foreground: #111111), consistent with the reference screenshots' tone. The dotted divider renders as a visible 1px dotted rule matching the reference's structural dividers. The dark card renders solid near-black (--card-dark) with a visible border and white text. The pill button renders outlined/cream by default and fully inverts to solid black background with white text on hover/focus, matching the reference's monochrome inversion language.
+
+Remaining visual mismatch: the Barlow Condensed 900 letterforms are inherently rounder/more open (e.g. in O, A, D counters) than Druk's more geometric, blockier letterforms — this is a font-family-level difference tracking cannot close, already accepted and documented in the "Display font tuning" decision. No further action taken, per instruction not to change font family. Card corner-radius, exact button/pill radius in situ, and section-level composition cannot be evaluated yet since no real components exist — deferred to their respective phases as already decided.
+
+Unresolved issues / notes:
+
+The style-check route is a real, reachable page (/style-check) — not an underscore-prefixed private folder — because it needed to be viewable in a browser for this verification. It must be deleted before Phase 4 per its own on-page notice and this record.
+
+Next approved phase: Phase 3 — WordPress Content Types & Sample Data. Not started; awaiting explicit approval per working method.
 
 Known content/asset gaps
 
@@ -142,11 +178,11 @@ Exact production URLs for all social/streaming destinations should be verified.
 
 Known technical verification tasks
 
-Phase 2
+Phase 2 (complete — see Phase 2 log above)
 
-Verify current reference-derived HEX values visually before locking CSS tokens.
+Verified current reference-derived HEX values visually before locking CSS tokens (Phase 2 style-check route, screenshots reviewed against references/screenshots/).
 
-Use Barlow Condensed 900, not League Gothic 900.
+Confirmed Barlow Condensed 900 is loaded via next/font, not League Gothic 900.
 
 Phase 3
 
@@ -158,4 +194,4 @@ Confirm CPT custom-fields support where native registered post meta requires it.
 
 Next action
 
-Phase 1 is complete. Begin Phase 2 — Verify Reference Typography & Design Tokens — only after explicit approval, per the working method in CLAUDE.md.
+Phase 2 is complete. Begin Phase 3 — WordPress Content Types & Sample Data — only after explicit approval, per the working method in CLAUDE.md.
