@@ -1,4 +1,5 @@
 import Header from "./components/Header";
+import Hero from "./components/Hero";
 import styles from "./page.module.css";
 
 const SECTIONS = [
@@ -13,9 +14,7 @@ export default function Home() {
     <>
       <Header />
       <main>
-        <section id="hero" className={styles.placeholder}>
-          <h1 className={styles.placeholderHeading}>Hero</h1>
-        </section>
+        <Hero />
         {SECTIONS.map(({ id, label }) => (
           <section key={id} id={id} className={styles.placeholder}>
             <h2 className={styles.placeholderHeading}>{label}</h2>

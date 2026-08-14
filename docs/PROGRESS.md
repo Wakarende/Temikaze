@@ -4,9 +4,9 @@ Last updated: 2026-08-13
 
 Current state
 
-Implementation status: Phase 4 complete.
+Implementation status: Phase 5 complete.
 
-Current approved phase: Phase 4 done → next is Phase 5 (not yet approved to begin).
+Current approved phase: Phase 5 done → next is Phase 6 (not yet approved to begin).
 
 What is already done
 
@@ -50,7 +50,7 @@ Phase 3 — WordPress Content Types & Sample Data — Complete (2026-08-13)
 
 Phase 4 — Global Static Layout & Navigation — Complete (2026-08-14)
 
-Phase 5 — Hero
+Phase 5 — Hero — Complete (2026-08-14)
 
 Phase 6 — Music & Mixes
 
@@ -312,6 +312,56 @@ Mismatch remaining: none from this phase's own scope. The one previously-documen
 
 Anything not verified: real mouse-hover/keyboard-tab interaction was not exercised live (no interactive browser session, only static screenshots and HTML/CSS inspection) — the :focus-visible outline and pill hover-invert are the same CSS mechanism already visually verified working in Phase 2, but weren't re-screenshotted mid-interaction this phase. Sticky behavior while actively scrolling was not captured as a scroll-in-progress screenshot; position: sticky is a well-established native CSS behavior and the header markup/CSS were reviewed for correctness, but a live scroll-and-observe check wasn't performed.
 
+Phase 5 log — Hero (2026-08-14)
+
+Status: Complete.
+
+Files created:
+
+frontend/app/components/Hero.tsx — the Hero section: a full-width identity band (TEMIKAZE h1 wordmark + supporting tagline/location) stacked above a full-width image band, with two dark floating status card links, per the corrected Hero structure in MASTER_SPEC.md Section 10 (not the old 42/58 column layout).
+
+frontend/app/components/Hero.module.css — all Hero styling: identity band layout, image crop/zoom treatment, sticky floating card stack, card interaction states, initial-reveal keyframe, and reduced-motion overrides.
+
+frontend/public/images/temikaze-hero.png — a byte-for-byte copy (verified via matching md5 hashes) of assets-source/photos/temikaze-hero.png, placed where next/image can serve it. The source file in assets-source/ was not modified, moved, or re-encoded.
+
+Files modified:
+
+frontend/app/page.tsx — the Hero placeholder `<section>` replaced with `<Hero />`. Music/Practice/Visuals/Booking placeholders were left untouched, still Phase 4's minimal `<h2>` sections.
+
+Source asset finding: the source photo (assets-source/photos/temikaze-hero.png) is 1257×1277px — nearly square, not landscape, so the landscape band comes entirely from a CSS crop. More significantly, the file has carousel UI chrome baked into the pixels (left/right arrow icons, pagination dots), consistent with being a raw screenshot export of an Instagram carousel post rather than a clean photo export. A plain object-fit: cover landscape crop would still show both arrow icons at the edges, since that crop only trims top/bottom on a near-square source, not sides. Applied transform: scale(1.15) on the image inside an overflow: hidden wrapper to crop the artifacts out of the visible frame while keeping the subject (matches CONTENT_INVENTORY.md's documented "outdoor portrait near The Leadmill" category — the venue signage is legible in the shot) in frame; object-position: center 30% biases the crop toward the upper-body/head area. This is a display-time CSS crop only — the source file is untouched. Recommend replacing this asset with a clean (non-carousel-screenshot) export before production.
+
+Content used (all from the explicit content given this phase, nothing invented): wordmark "Temikaze", tagline "House / Afro House DJ + Producer", location "Nairobi, Kenya". Status cards: Latest Release → "Nia" (href="#music"), Latest Mix → "Mum's Garage Radio" (href="#music"). No Next Event card — none is sufficiently verified, and none was fabricated. No streaming URLs were invented; cards link to #music only, per instruction.
+
+Status card treatment: --card-dark background, --card-border outline, small corner radius (10px — a concrete value chosen and visually tuned this phase, resolving the "exact radius deferred to Phase 5" note from the Phase 2 log), white primary text (--foreground-light), the Eyebrow/Status Label typography role (Newsreader 400 italic) for "Latest Release"/"Latest Mix", Inter 600 for the card title. Status dots reuse two of the three already-locked tokens (--status-dot-red for Release, --status-dot-blue for Mix) — no new colors introduced, no broader color system created. Cards are real `<a>` elements (not clickable divs) since they have a real destination (#music).
+
+Card interaction: horizontal translateX(10px) + arrow (→) reveal on both :hover and :focus-visible, no vertical lift. Cards float over the image via position: sticky (not absolute) inside the image band, so they visually sit over the image's upper-left and remain pinned during the Hero's own scroll range, releasing naturally once the image band's box ends — before Music, per the locked "unpin before they overlap the next section" behaviour — achieved with plain CSS, no GSAP, no scroll library.
+
+Motion: a restrained CSS @keyframes fade+rise reveal (opacity 0→1, translateY 12px→0, ~0.7s) on the identity band and image on load, staggered slightly. @media (prefers-reduced-motion: reduce) disables that animation entirely (content renders at its normal static state immediately, never stuck invisible) and removes the card translateX/arrow transitions, per MASTER_SPEC's "static cards, no translation requirement" wording — verified by screenshot with Chrome's --force-prefers-reduced-motion flag.
+
+Extended mobile CSS investigation: the tagline "House / Afro House DJ + Producer" was clipped at the 375px breakpoint, cut off mid-word ("Produce|r") rather than wrapping — the signature of a box overflowing its container rather than a text-wrap failure. Several plausible fixes were tried and each was verified empirically (not assumed) against the actual compiled CSS bundle, the actual rendered HTML class attributes, and repeated screenshots: align-items: stretch on the flex-column identity band did not resolve it; neither did an explicit width: 100% on the tagline element alone. Adding a debug outline directly to the identity band's own box revealed that it — not the tagline — was the element failing to constrain: display: block does control how an element lays out its own children, but it does not change how that element itself is sized by ITS OWN parent flex container. .identity remained a flex item of .hero (which keeps display: flex; flex-direction: column at all breakpoints, with no mobile override), so its width kept following flexbox sizing rules regardless of its own display value. The real fix was adding an explicit width: 100% directly to .identity itself inside the mobile media query, alongside display: block. Verified clean afterward with no debug artifacts left in the CSS, confirmed desktop was unaffected (the fix is scoped inside @media (max-width: 767px)).
+
+Tests/checks run:
+
+npm run lint — passed clean (multiple times through the investigation, and on the final code).
+
+npm run build — passed clean on the final code; only expected routes (/, /_not-found) generated.
+
+npm run dev + curl http://localhost:3000/ — HTTP 200; grepped HTML directly for the wordmark, tagline, location, hero image path, both status card links, and their #music targets — all present.
+
+Multiple rounds of headless-Chrome screenshots at desktop (1440px) and mobile (375px), including several debug-instrumented rounds specifically to isolate the mobile CSS bug described above, concluding with a clean final round at both widths showing no clipping or overflow.
+
+Hover/focus interaction verified via a temporarily-added autoFocus prop on the first status card (reverted immediately after): screenshot confirmed the card shifts right and the arrow becomes visible, matching the locked interaction; compared against references/screenshots/hero-card-hover.png.
+
+Reduced-motion fallback verified via Chrome's --force-prefers-reduced-motion flag: Hero renders fully and correctly, content is not stuck invisible, matching the default state.
+
+Visually checked against references/screenshots/hero-default.png and hero-card-hover.png:
+
+Desktop: identity-band proportions, wordmark scale/tracking (TEMIKAZE at hero scale reads as tight as the reference wordmark, consistent with the Phase 2 finding — no further tuning needed), tagline/location placement (upper-right, editorial serif, matching the reference's tagline position), image-band height/crop (the carousel-artifact cropping worked — no arrow icons visible in the rendered crop), floating-card placement (upper-left over the image), card size/radius, dotted/header relationship, whitespace/gutters, and overall density were all compared directly and found closely consistent with the reference.
+
+Mobile: Hero adapts cleanly — wordmark scales down, tagline/location stack below it, image band remains full-width, cards stack vertically and remain fully legible with no overlap or collision, no horizontal overflow after the fix above.
+
+Remaining known mismatches: (1) the already-accepted Barlow Condensed vs Druk letterform gap, unchanged from Phase 2/4. (2) The source hero photo is a carousel-screenshot export with baked-in UI chrome — successfully cropped out visually this phase, but a cleaner source export is recommended before production so the crop doesn't have to compensate for it. (3) The exact reason plain (non-!important) width constraints failed on a flex item that had itself been switched to display: block, while an explicit width directly on that same element (also non-!important) succeeded, was identified and understood by isolating the actual oversized element via debug outlines — not left as an unexplained !important workaround.
+
 Known content/asset gaps
 
 Booking email is not yet confirmed.
@@ -325,6 +375,8 @@ Additional performance photography would strengthen the gallery.
 Final DJ / Producer / Curator copy needs to be approved.
 
 Exact production URLs for all social/streaming destinations should be verified.
+
+The hero photo (assets-source/photos/temikaze-hero.png) is a raw Instagram-carousel screenshot export with baked-in UI chrome (arrow icons, pagination dots), not a clean photo export. It's usable as-is (the Phase 5 CSS crop hides the chrome), but a clean re-export would remove the need for that compensating crop.
 
 Known technical verification tasks
 
@@ -348,6 +400,15 @@ Confirmed the temporary /style-check route (Phase 2) was deleted.
 
 Confirmed no horizontal overflow at desktop (1440px) or mobile (375px) — a mobile overflow bug was found and fixed during this phase (see Phase 4 log).
 
+Phase 5 (complete — see Phase 5 log above)
+
+Confirmed the Hero card corner radius (deferred from Phase 2) is now set: 10px, visually tuned this phase.
+
+Confirmed no horizontal overflow at desktop (1440px) or mobile (375px) — a mobile overflow bug was found, fully root-caused, and fixed during this phase (see Phase 5 log).
+
+Confirmed hover/focus card interaction and the reduced-motion fallback both work as specified.
+
 Next action
 
-Phase 4 is complete. Begin Phase 5 — Hero — only after explicit approval, per the working method in CLAUDE.md.
+Phase 5 is complete. Begin Phase 6 — Music & Mixes — only after explicit approval, per the working method in CLAUDE.md.
+
