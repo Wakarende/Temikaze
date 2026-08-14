@@ -4,9 +4,9 @@ Last updated: 2026-08-13
 
 Current state
 
-Implementation status: Phase 3 complete.
+Implementation status: Phase 4 complete.
 
-Current approved phase: Phase 3 done → next is Phase 4 (not yet approved to begin).
+Current approved phase: Phase 4 done → next is Phase 5 (not yet approved to begin).
 
 What is already done
 
@@ -48,7 +48,7 @@ Phase 2 — Verify Typography & Design Tokens — Complete (2026-08-13)
 
 Phase 3 — WordPress Content Types & Sample Data — Complete (2026-08-13)
 
-Phase 4 — Global Static Layout & Navigation
+Phase 4 — Global Static Layout & Navigation — Complete (2026-08-14)
 
 Phase 5 — Hero
 
@@ -266,6 +266,52 @@ Reverified /wp-json/wp/v2/events after deletion: HTTP 200, response body [] — 
 
 No plugin code was changed for this cleanup — only the one WordPress post was deleted. artist_profile #5, releases #6, and mixes #7 were not touched and remain as originally seeded.
 
+Phase 4 log — Global Static Layout & Navigation (2026-08-14)
+
+Status: Complete.
+
+Files created:
+
+frontend/app/components/Header.tsx — sticky header: TEMIKAZE wordmark (links to #hero), nav (music/practice/visuals/booking, lowercase, links to #music/#practice/#visuals/#booking), and a "book artist" pill CTA linking to #booking. All native anchor links, no scroll library.
+
+frontend/app/components/Header.module.css — header styling: sticky positioning, solid cream background, 1px dotted bottom divider (reusing the existing --divider token), Barlow Condensed 900 wordmark at a smaller header-appropriate size (not the --text-hero token, which stays reserved for the real Hero H1 in Phase 5), nav/CTA text using the existing Button typography token (Inter 600, lowercase, +0.03em tracking — no text-transform applied, content is written lowercase directly), outlined pill CTA that inverts to solid black/white on hover/:focus-visible (same pattern already verified in Phase 2). No audio-toggle icon and no decorative replacement for it.
+
+frontend/app/page.module.css — minimal placeholder-section styling (min-height: 100vh, centered content, dotted bottom divider, Barlow Condensed Section-H2-scale heading applied directly to the heading element, not just inherited from the parent, since the browser's UA stylesheet sets explicit font-size/weight on h1–h6 that would otherwise override an inherited value from the section wrapper).
+
+Files modified:
+
+frontend/app/page.tsx — rewritten to render `<Header />` plus five section placeholders in the locked order (hero, music, practice, visuals, booking), each containing only its section name. hero uses `<h1>` (the page's one semantic H1, satisfying the accessibility rule now rather than deferring it); music/practice/visuals/booking use `<h2>`. Each section carries its real id so the header's anchor links are already testable.
+
+frontend/app/globals.css — added a global .container utility class (max-width: var(--content-max-width); margin-inline: auto; padding-inline: var(--gutter)) implementing the locked max-width/gutter system as a reusable primitive for the header and every future section. No new colors or typography rules were introduced; only the already-locked Phase 2 tokens were referenced.
+
+Files deleted:
+
+frontend/app/style-check/page.tsx and page.module.css (and the now-empty style-check/ directory) — the temporary Phase 2 verification route, removed per its own on-page notice. Nothing else referenced it.
+
+Build cache note: the first post-deletion build failed with a stale TypeScript error (TS2307, "Cannot find module '../../../app/style-check/page.js'") coming from a generated route-type file in .next/dev/types/ left over from when the route still existed. This was not a real code defect — clearing frontend/.next and rebuilding resolved it immediately.
+
+Mobile overflow bug found and fixed: the first mobile screenshot (375px width) showed the "book artist" pill CTA clipped off the right edge of the viewport, and a second attempt showed the nav links themselves ("visuals"/"booking") clipped. Root cause: nested flex containers (.inner > .nav > .navList) default to sizing themselves by their own content's minimum width even when an ancestor has flex-wrap set, so flex-wrap alone doesn't reliably trigger without the wrapping container itself being width-constrained. Fix: at the <768px breakpoint, .nav switches to flex-direction: column with width: 100%, and .navList gets flex-wrap: wrap plus width: 100%, so both are constrained to the actual available width and wrap correctly — links row on top, pill CTA on its own line below, both fully visible with no clipping. Reverified via a third mobile screenshot after the fix.
+
+Tests/checks run:
+
+npm run lint — passed clean (run after initial implementation and again after the mobile-overflow CSS fix).
+
+npm run build — failed once (stale .next cache, see above), then passed clean twice after clearing the cache and after the mobile fix; only expected routes (/, /_not-found) are generated — /style-check is gone.
+
+npm run dev + curl http://localhost:3000/ — HTTP 200. Grepped the returned HTML directly: all five section ids (hero, music, practice, visuals, booking) present; all anchor hrefs present and correctly targeted (#hero, #music, #practice, #visuals, #booking, plus a second #booking for the CTA).
+
+Three rounds of headless-Chrome screenshots (desktop 1440×900, mobile 375×800 ×2 before/after the fix) — viewed directly to check for overflow and compare against references/screenshots/hero-default.png.
+
+Visually checked against references/screenshots/hero-default.png:
+
+Desktop (1440px): cream canvas tone matches; header height/proportion reads close to the reference's compact header band; horizontal gutters look consistent with the reference's left/right margins; TEMIKAZE wordmark renders in the same bold condensed uppercase treatment as the reference logo, appropriately smaller than the Hero-scale wordmark; nav link spacing (music / practice / visuals / booking) closely mirrors the reference's lowercase "audio writing visual" nav rhythm; the dotted divider beneath the header matches the reference's dotted rule; the "book artist" pill matches the reference's outlined-pill shape and density. No horizontal overflow.
+
+Mobile (375px): after the fix, wordmark sits top-left, nav links wrap to their own full-width row, and the CTA pill sits cleanly below on its own row — no clipping, no horizontal overflow, no invented hamburger menu (four short lowercase words plus one pill did not require one).
+
+Mismatch remaining: none from this phase's own scope. The one previously-documented, already-accepted gap carries forward unchanged: Barlow Condensed 900's letterforms remain visually rounder/more open than Druk's more geometric shapes (see Phase 2 log and the "Display font tuning" decision) — this is a font-family-level difference, not something Phase 4's layout work could or should address.
+
+Anything not verified: real mouse-hover/keyboard-tab interaction was not exercised live (no interactive browser session, only static screenshots and HTML/CSS inspection) — the :focus-visible outline and pill hover-invert are the same CSS mechanism already visually verified working in Phase 2, but weren't re-screenshotted mid-interaction this phase. Sticky behavior while actively scrolling was not captured as a scroll-in-progress screenshot; position: sticky is a well-established native CSS behavior and the header markup/CSS were reviewed for correctness, but a live scroll-and-observe check wasn't performed.
+
 Known content/asset gaps
 
 Booking email is not yet confirmed.
@@ -296,6 +342,12 @@ Confirmed all frontend-facing custom fields/meta are exposed through REST (verif
 
 Confirmed all 5 CPTs support custom-fields.
 
+Phase 4 (complete — see Phase 4 log above)
+
+Confirmed the temporary /style-check route (Phase 2) was deleted.
+
+Confirmed no horizontal overflow at desktop (1440px) or mobile (375px) — a mobile overflow bug was found and fixed during this phase (see Phase 4 log).
+
 Next action
 
-Phase 3 is complete. Begin Phase 4 — Global Static Layout & Navigation — only after explicit approval, per the working method in CLAUDE.md. Note: the temporary /style-check route from Phase 2 still needs to be deleted as part of Phase 4 per its own on-page notice.
+Phase 4 is complete. Begin Phase 5 — Hero — only after explicit approval, per the working method in CLAUDE.md.

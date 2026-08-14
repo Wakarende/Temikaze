@@ -1,0 +1,17 @@
+.placeholder {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: var(--divider);
+}
+
+.placeholderHeading {
+  font-family: var(--font-display);
+  font-weight: var(--weight-h2);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground);
+}
