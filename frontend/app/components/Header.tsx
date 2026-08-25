@@ -2,7 +2,6 @@ import styles from "./Header.module.css";
 
 const NAV_LINKS = [
   { href: "#music", label: "music" },
-  { href: "#practice", label: "practice" },
   { href: "#visuals", label: "visuals" },
   { href: "#booking", label: "booking" },
 ];

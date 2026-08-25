@@ -29,19 +29,19 @@ Demonstrate production-quality frontend engineering, animation, CMS integration,
 
 2. Locked Homepage Architecture
 
-Homepage v1 contains exactly five sections:
+Homepage v1 contains exactly four sections:
 
 Hero
 
 Music & Mixes
-
-Practice
 
 Stage & Visuals
 
 Booking / Contact
 
 Do not add additional homepage sections without an explicit decision.
+
+Artist bio: a Practice section (DJ / Producer / Curator) was previously specified as a fifth homepage section and was built, then removed by product decision on 2026-08-25. The artist bio is not part of the homepage. It will be placed elsewhere in the site; its final location and structure are pending user direction. Do not rebuild Practice, and do not add an About or Bio section to the homepage in its place. See Section 12 and docs/DECISIONS.md.
 
 A full /music archive and individual release/mix pages are future Phase 2, not homepage-v1 scope.
 
@@ -973,103 +973,19 @@ Reduced-motion mode remains usable.
 
 External music actions can be tracked.
 
-12. SECTION 3 — PRACTICE
+12. SECTION 3 — PRACTICE (REMOVED 2026-08-25)
 
-Purpose
+Removed from homepage v1 by product decision.
 
-Explain Temikaze through three factual roles:
+This section previously specified a three-role editorial grid (DJ / Producer / Curator) adapted from the reference WRITTEN section. It was implemented in Phase 7 and then removed. The homepage no longer contains it, and the global navigation no longer links to it.
 
-DJ
+The DJ / Producer / Curator structure is not a current requirement.
 
-Producer
+The artist bio will be introduced elsewhere in the site once its location and structure are specified. That direction has not been given yet.
 
-Curator / TG & fRenz
+Do not rebuild this section. Do not substitute an About or Bio section on the homepage in its place. Do not add a placeholder for it.
 
-No blog.
-No fake editorial content.
-No fabricated achievements.
-
-Desktop layout
-
-Adapt the reference WRITTEN grid:
-
-large PRACTICE / PRACTICE & IDENTITY heading
-
-approximately 50/50 editorial grid
-
-left side: primary DJ block, center-aligned (heading, body copy, and any CTA), following the reference's center-aligned featured Written block
-
-right side (unchanged):
-
-Producer block
-
-horizontal dotted divider
-
-Curator block
-
-vertical dotted divider between columns
-
-TG & fRenz logo may appear as content inside Curator block
-
-Dotted lines are static.
-Do not animate line drawing.
-
-Typography
-
-Section title:
-
-Barlow Condensed 900
-
-Role titles / editorial contrast:
-
-Newsreader
-
-Body/meta:
-
-Inter
-
-Motion
-
-Keep understated.
-Simple content reveal is acceptable if it matches the reference's general entrance language.
-
-Do not add decorative line-drawing animation.
-
-Mobile
-
-one column
-
-DJ → Producer → Curator
-
-horizontal dotted divider between blocks
-
-remove vertical divider
-
-CMS dependencies
-
-artist_profile
-
-DJ description
-
-Producer description
-
-Curator description
-
-TG & fRenz logo/media reference if stored there
-
-Acceptance criteria
-
-Three roles only.
-
-Copy is factual.
-
-Grid mirrors reference editorial structure.
-
-No fake articles.
-
-No animated dotted-rule drawing.
-
-Mobile stack is clean and readable.
+The section number is retained deliberately so that existing cross-references to MASTER_SPEC section numbers elsewhere in the documentation remain valid. The removed specification text is preserved in Git history, and the build-then-remove sequence is recorded in docs/PROGRESS.md and docs/DECISIONS.md.
 
 13. SECTION 4 — STAGE & VISUALS
 
@@ -1693,13 +1609,11 @@ active states
 
 mobile native scroll-snap
 
-Phase 7 — Practice
+Phase 7 — Practice (implemented, then removed)
 
-editorial grid
+built 2026-08-25, removed the same day by product decision
 
-factual role content
-
-responsive stacking
+phase number retained; not current functionality — see docs/PROGRESS.md
 
 Phase 8 — Stage & Visuals
 

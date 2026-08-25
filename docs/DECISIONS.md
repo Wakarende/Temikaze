@@ -131,6 +131,8 @@ Curator / TG & fRenz
 
 No blog or fabricated editorial content.
 
+Superseded (2026-08-25) — the Practice section was removed from the homepage by product decision. The DJ / Producer / Curator structure is no longer a homepage requirement. The artist bio will be introduced elsewhere once its location is specified. See the 2026-08-25 removal entry at the end of this file.
+
 2026-08-13 — Content integrity
 
 Never fabricate:
@@ -224,6 +226,8 @@ MASTER_SPEC.md Section 5 now notes that final wordmark/section-heading letter-sp
 Phase 2 visual audit showed the reference's featured Written block (left column) is center-aligned, not left-aligned.
 
 MASTER_SPEC.md Section 12 now specifies the Practice DJ block (left side, desktop) is center-aligned. Producer and Curator blocks (right side) are unchanged.
+
+Superseded (2026-08-25) — Practice was removed from the homepage. This alignment rule is no longer an active requirement.
 
 2026-08-13 — Hero card hover interaction retained
 
@@ -327,6 +331,8 @@ Practice is therefore a static editorial layout. No sticky section-header system
 
 This can be reconsidered during final homepage polish if the Practice content grows enough to give the interaction real range. It is recorded here so a later reader does not mistake its absence for an oversight.
 
+Superseded (2026-08-25) — Practice was removed from the homepage, so the sticky-versus-static question is moot: there is no Practice section to apply it to. The reference observation itself remains factually accurate and may be useful if a comparable two-column editorial layout is ever built elsewhere in the site.
+
 2026-08-25 — Practice featured role title is scaled above the Role H3 token
 
 MASTER_SPEC.md Section 5 assigns "Item / Role H3" to Newsreader at clamp(1.5rem, 2.5vw, 2.2rem). Applied uniformly, that token would render DJ, Producer and Curator at identical size and flatten the reference's featured-versus-list hierarchy, in which the featured title reads at roughly 0.9x the section heading while the list titles sit well below it.
@@ -336,3 +342,39 @@ Accepted: the right-column role titles (Producer, Curator) use the Role H3 token
 This is a component-local size in Practice.module.css. No global typography token was added or changed. The precedent is Header.module.css, which already sets a component-local wordmark size rather than reusing --text-hero.
 
 Known consequence, accepted for now: our featured-title-to-list-title ratio is roughly 0.49, against roughly 0.70 in the reference, because the Role H3 cap holds the list titles down. Closing that gap would require raising a locked global token and is left to a later decision rather than taken unilaterally during Phase 7.
+
+Superseded (2026-08-25) — Practice was removed from the homepage and Practice.module.css was deleted, so this component-local size no longer exists anywhere in the codebase. The underlying observation — that applying the Role H3 token uniformly flattens a featured-versus-list hierarchy — remains relevant if a similar editorial layout is built elsewhere.
+
+2026-08-25 — Practice section removed from the homepage
+
+Product decision by the user. Not a technical or visual problem with the implementation — Phase 7 had been built, verified, and accepted the same day.
+
+The Practice section is removed from homepage v1. The homepage section order is now:
+
+1. Hero
+
+2. Music & Mixes
+
+3. Stage & Visuals
+
+4. Booking / Contact
+
+The DJ / Producer / Curator structure is no longer part of the current homepage and is not a requirement anywhere else at present.
+
+The artist bio belongs elsewhere in the site. Its location and structure are pending user direction and have not been specified. Until they are:
+
+do not rebuild Practice,
+
+do not add an About or Bio section to the homepage in its place,
+
+do not add a placeholder for it,
+
+and do not relocate or invent the bio copy.
+
+What was actually removed: frontend/app/components/Practice.tsx and Practice.module.css were deleted; the Practice import, the rendered component, and the "practice" entry in the homepage placeholder list were removed from frontend/app/page.tsx; and the "#practice" link was removed from NAV_LINKS in frontend/app/components/Header.tsx. No other navigation item was touched.
+
+MASTER_SPEC.md Section 2 now specifies four homepage sections. Section 12 is retained as a numbered stub marking the removal, so that existing cross-references to MASTER_SPEC section numbers elsewhere in this file remain valid — Sections 5, 10, 11, 12 and 13 are all cited by number in entries above.
+
+Phase numbering is unchanged. Phase 7 remains the Practice phase, documented as implemented and then removed. Phases were not renumbered. The next implementation work is the existing Phase 8 — Stage & Visuals.
+
+The four earlier Practice-specific decisions in this file (the 2026-08-13 Practice section definition, the 2026-08-13 center-alignment rule, and the two 2026-08-25 layout decisions) are each annotated as superseded in place rather than deleted, so the history of what was decided and why remains readable.

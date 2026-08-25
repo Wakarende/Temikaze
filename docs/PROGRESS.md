@@ -4,9 +4,9 @@ Last updated: 2026-08-25
 
 Current state
 
-Implementation status: Phase 7 — Practice — complete (2026-08-25). Phase 6 remains accepted in its current state (2026-08-21) after a multi-round repair, committed and pushed (3887173). See the Phase 7 log for what was built and verified this phase, "Phase 6 accepted state" and "Phase 6 repair log" for Phase 6, and "Deferred Phase 6 polish" / "Deferred asset/content work" for what is carried forward, non-blocking.
+Implementation status: Phase 6 — Music & Mixes — is the most recent phase that is both complete and still part of the site (accepted 2026-08-21, committed and pushed as 3887173). Phase 7 — Practice — was built on 2026-08-25 (commit 8bbcf93) and REMOVED the same day by product decision; it is not current functionality. See "Phase 7 REMOVED" below.
 
-Current approved phase: Phase 7 complete, uncommitted. Phase 8 — Stage & Visuals — is next and has not yet been approved to begin. See Next action.
+Current approved phase: none in progress. Phase 8 — Stage & Visuals — is the next implementation work and has not yet been approved to begin. See Next action.
 
 Development machine: moved from macOS to Windows on 2026-08-25. See "Repository housekeeping — macOS to Windows migration" below for what that changed — notably, the WordPress installation on this machine holds no sample records (re-seeding deferred to Phase 10), and the reference .mov recordings are not present locally.
 
@@ -56,7 +56,7 @@ Phase 5 — Hero — Complete (2026-08-14)
 
 Phase 6 — Music & Mixes — Accepted (2026-08-21): originally marked complete 2026-08-14, reopened the same day after manual browser verification found the pinned horizontal scroll broken, repaired across several rounds, then re-verified by manual browser testing and accepted in its current state. See "Phase 6 accepted state" below.
 
-Phase 7 — Practice — Complete (2026-08-25)
+Phase 7 — Practice — Implemented 2026-08-25, REMOVED 2026-08-25 by product decision. Not current functionality; phase number retained, phases not renumbered.
 
 Phase 8 — Stage & Visuals
 
@@ -726,12 +726,64 @@ Observation, not introduced by this phase and not fixed here: loading /#practice
 
 Acceptance criteria (MASTER_SPEC Section 12): three roles only — pass. Copy is factual — pass, only supplied copy is used. Grid mirrors the reference editorial structure — pass. No fake articles — pass. No animated dotted-rule drawing — pass; all rules are static CSS borders with no animation anywhere in the component. Mobile stack is clean and readable — pass, verified at a genuine 375px viewport.
 
+Phase 7 REMOVED — Practice deleted from the homepage (2026-08-25)
+
+Status: the Phase 7 work above is superseded. Practice is no longer part of the site. The Phase 7 log is left intact as history — it accurately records what was built and verified — but it must not be read as current functionality.
+
+Reason: product decision by the user. Not a defect, not a visual failure, not a verification failure. Phase 7 had been implemented, verified, and accepted the same day it was removed. The artist bio belongs elsewhere in the site.
+
+What was removed:
+
+frontend/app/components/Practice.tsx — deleted.
+
+frontend/app/components/Practice.module.css — deleted.
+
+frontend/app/page.tsx — the Practice import and the rendered component removed. "practice" is not in PLACEHOLDER_SECTIONS either; no placeholder was substituted.
+
+frontend/app/components/Header.tsx — the { href: "#practice", label: "practice" } entry removed from NAV_LINKS. No other navigation item was touched. Nav is now music / visuals / booking, plus the unchanged "book artist" pill and the Temikaze wordmark linking to #hero.
+
+The homepage no longer contains a #practice section, and nothing links to #practice.
+
+Current homepage structure: Hero (real) then Music (real) then Visuals (Phase 4 placeholder) then Booking (Phase 4 placeholder).
+
+Artist bio: location and structure are TBD, pending user direction. Explicitly not to be built, relocated, placeholdered, or invented until that direction is given. Do not rebuild Practice. Do not substitute an About or Bio section on the homepage.
+
+One deliberate non-change: frontend/app/components/Music.tsx line 15 still contains the phrase "so the section flew straight past into Practice instead of pausing on each record", inside the comment explaining SCROLL_PACE_MULTIPLIER. That is an accurate historical record of a manual browser observation made on 2026-08-21, when Practice did exist, and it explains why the multiplier has the value it does. It was left as written rather than edited, both because rewriting historical records is against project rules and because Music is outside this change's scope. It is the only remaining mention of Practice anywhere in the frontend source. Flagged here so it is not mistaken later for a stale structural reference.
+
+Documentation updated in the same pass:
+
+docs/MASTER_SPEC.md Section 2 — homepage architecture reduced from five sections to four (Hero, Music & Mixes, Stage & Visuals, Booking / Contact), with a note that the artist bio sits elsewhere and its location is pending direction.
+
+docs/MASTER_SPEC.md Section 12 — the full Practice specification was removed and replaced with a short stub recording the removal. The section number was deliberately retained rather than renumbering Sections 13 and 14, because docs/DECISIONS.md cites MASTER_SPEC Sections 5, 10, 11, 12 and 13 by number and renumbering would silently break every one of those references.
+
+docs/MASTER_SPEC.md Section 20 — the Phase 7 entry now reads "Practice (implemented, then removed)". Phases were not renumbered.
+
+docs/DECISIONS.md — a new dated entry records the removal, and the four earlier Practice-specific decisions (the 2026-08-13 section definition, the 2026-08-13 center-alignment rule, and the two 2026-08-25 layout decisions) are each annotated superseded in place. Nothing was deleted; that file's diff is purely additive.
+
+Tests/checks run after removal:
+
+npm run lint — passed clean.
+
+npx tsc --noEmit — exit 0.
+
+npm run build — passed clean; only the expected routes (/, /_not-found) generated.
+
+Grepped the whole frontend source for practice / #practice / Practice — the only remaining hit is the historical Music.tsx comment described above.
+
+Served-HTML check via npm run dev plus curl — confirmed id="practice" is absent, no href="#practice" is present, and the surviving section ids are hero, music, visuals, booking in that order.
+
+Next implementation work: Phase 8 — Stage & Visuals. Phase numbering is unchanged; Phase 7 stays documented as the removed Practice phase.
+
 Next action
 
-Phase 7 — Practice — is complete (2026-08-25), verified by lint, typecheck, build, measured DOM geometry, and desktop/mobile screenshot comparison against the reference. See the Phase 7 log above for what was verified and what visual differences remain.
+Phase 7 — Practice — was implemented and then REMOVED by product decision (2026-08-25). It is not current functionality. See "Phase 7 REMOVED" above. Do not rebuild it.
 
-Phase 8 — Stage & Visuals — is next. It must not begin without explicit approval, per the working method in CLAUDE.md.
+The homepage currently contains: Hero (real), Music (real), Visuals (placeholder), Booking (placeholder).
 
-Not blocking Phase 8: deferred Phase 6 polish (handoff timing, ruler falloff, final visual calibration), deferred Phase 7 calibration (item-rule offset, role-title scale relative to the reference), deferred asset/content work (Nia artwork, audio), the Hero to Music sticky-card overlap, the /#practice anchor landing observation recorded in the Phase 7 log, and the empty WordPress installation on this machine (deferred to Phase 10).
+Artist bio: location and structure TBD, pending user direction. Do not build, relocate, placeholder, or invent it until that direction is given.
 
-Uncommitted as of this entry: frontend/app/components/Practice.tsx, frontend/app/components/Practice.module.css (both new), frontend/app/page.tsx (modified), and the documentation updates in this file and docs/DECISIONS.md. Not committed or pushed, per instruction.
+Phase 8 — Stage & Visuals — is the next implementation work. It must not begin without explicit approval, per the working method in CLAUDE.md. Phase numbering is unchanged; phases were not renumbered when Practice was removed.
+
+Not blocking Phase 8: deferred Phase 6 polish (handoff timing, ruler falloff, final visual calibration), deferred asset/content work (Nia artwork, audio), the Hero to Music sticky-card overlap, and the empty WordPress installation on this machine (deferred to Phase 10).
+
+Uncommitted as of this entry: the Practice removal (two deleted component files, frontend/app/page.tsx, frontend/app/components/Header.tsx) and the documentation updates in this file, docs/MASTER_SPEC.md and docs/DECISIONS.md. Not committed or pushed, per instruction.
