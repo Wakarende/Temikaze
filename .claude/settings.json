@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"chrome-profile\")",
+      "Bash(pkill -f \"chrome-profile2\")",
+      "Bash(pkill -f \"chrome-profile4\")",
+      "Bash(echo \"grep exit: $?\")",
+      "Bash(curl -s -o /dev/null -w \"dev server HTTP %{http_code}\\\\n\" http://localhost:3000/)"
+    ]
+  }
+}

@@ -83,6 +83,10 @@
     --text-eyebrow: 0.8rem;
     --text-button: 0.8rem;
     --section-spacing: clamp(3rem, 6vw, 5rem);
+    /* Header.module.css wraps into wordmark / nav / CTA rows below 768px,
+       so it's taller than the 70px desktop target — scroll-padding-top
+       needs the real height or anchor jumps clip the section heading. */
+    --header-height: 140px;
   }
 }
 
@@ -103,6 +107,15 @@ body {
   height: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+}
+
+/* Offsets anchor-jump targets so the sticky header never clips a section's
+   own heading (e.g. clicking the header's "music" link, or a shared
+   #music URL). scroll-margin-top on the target is more consistently
+   honored for hash-fragment navigation than scroll-padding-top on the
+   scroll container. */
+section[id] {
+  scroll-margin-top: var(--header-height);
 }
 
 body {

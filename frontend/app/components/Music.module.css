@@ -1,0 +1,282 @@
+.music {
+  background: var(--background);
+}
+
+/* Structural only — exists so GSAP has one element to pin that contains
+   both the header and the record stage together (see Music.tsx). No
+   styling of its own; headerRow and wrapper are ordinary block children
+   and already stack top-to-bottom without any flex context here. */
+.pinStage {
+  background: var(--background);
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding-block: 1.5rem;
+  border-top: var(--divider);
+  border-bottom: var(--divider);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: var(--weight-h2);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.descriptor {
+  font-family: var(--font-serif);
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  color: var(--foreground);
+  text-align: right;
+  max-width: 20rem;
+}
+
+/* Wrapper: native horizontal scroller by default. GSAP only switches it
+   into "pinned" mode (data-pinned="true") at desktop widths without
+   reduced motion — see Music.tsx. This keeps exactly one source of truth
+   for which mode is active, instead of duplicating the breakpoint in CSS. */
+.wrapper {
+  --music-card-width: clamp(280px, 24vw, 380px);
+  --music-disc-size: clamp(140px, 11vw, 190px);
+
+  position: relative;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  padding-block: 3rem;
+}
+
+.wrapper[data-pinned="true"] {
+  overflow: hidden;
+}
+
+/* Reference (audio-active-item.png) shows the ruler/tick axis sitting at
+   the title/year row, well below the vinyl disc — not cutting through it.
+   Offset is measured from the card stack's own vertical center (where the
+   disc sits, since the disc is by far the tallest element in the stack)
+   down past the metadata label to the title row. */
+.ruler {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + (var(--music-disc-size) / 2) + 0.75rem);
+  height: 28px;
+  transform: translateY(-50%);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--rule) 0px,
+    var(--rule) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Static gradient ruler stays the mobile/tablet/reduced-motion ruler as-is.
+   Desktop scrub mode swaps it for individually-animated tick elements
+   (populated by Music.tsx) sharing the same bottom anchor line, so ticks
+   grow upward from a stable baseline rather than expanding in both
+   directions — matching the reference's fixed lower edge. */
+.wrapper[data-pinned="true"] .ruler {
+  opacity: 0;
+}
+
+.rulerTicks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + (var(--music-disc-size) / 2) + 0.75rem + 14px - 34px);
+  height: 34px;
+  display: none;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.wrapper[data-pinned="true"] .rulerTicks {
+  display: flex;
+}
+
+.rulerTick {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 10px;
+  background: var(--foreground);
+  opacity: 0.3;
+}
+
+.track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* Reference shows records mostly isolated in open space, with only faint
+     title/year fragments of neighbours peeking at the viewport edges — a
+     much larger gap than a typical card carousel. */
+  gap: clamp(6rem, 12vw, 14rem);
+  /* Leading/trailing space is half the card width (tied to the same
+     --music-card-width the card itself uses, so the two can never drift
+     out of sync the way a hard-coded pixel value could), so the first and
+     last cards can each reach true horizontal center — not just the
+     regular gutter, which would leave the first card permanently
+     left-of-center and unable to ever register as the active item. */
+  padding-inline: max(var(--gutter), calc(50% - (var(--music-card-width) / 2)));
+  list-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.wrapper[data-pinned="true"] .track {
+  scroll-snap-type: none;
+}
+
+.card {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--music-card-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  scroll-snap-align: center;
+  opacity: 1;
+  transform: scale(1);
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Reference muted/inactive releases remain large, legible editorial
+   objects — not tiny or nearly invisible — so this is a strong "muted"
+   state, not a deep fade. These are fallback/rest values only (matching
+   Music.tsx's CARD_MUTED_OPACITY/CARD_MUTED_SCALE constants) — once
+   pinned, Music.tsx sets opacity/transform inline on every card every
+   scrub tick, continuously, so the CSS transition here is turned off for
+   the pinned state to avoid it fighting/lagging behind values that are
+   already being animated smoothly by scroll position. */
+.wrapper[data-pinned="true"] .card {
+  opacity: 0.35;
+  transform: scale(0.7);
+  transition: none;
+}
+
+.wrapper[data-pinned="true"] .card[data-active="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.disc {
+  position: relative;
+  width: var(--music-disc-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle,
+    #1a1a1a 0px,
+    #1a1a1a 2px,
+    #0d0d0d 2px,
+    #0d0d0d 4px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wrapper[data-pinned="true"] .card[data-active="true"] .disc {
+    animation: discSpin 14s linear infinite;
+  }
+}
+
+@keyframes discSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.artwork {
+  position: relative;
+  width: 44%;
+  height: 44%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.metadata {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-metadata);
+  font-size: var(--text-metadata);
+  letter-spacing: var(--tracking-metadata);
+  text-transform: uppercase;
+  color: var(--foreground-muted);
+}
+
+/* Reference active-item titles ("The Family Tree: The Roots") run
+   noticeably larger than the standard Item/Role H3 token — closer to a
+   secondary display size — so this uses its own clamp rather than
+   --text-h3, while staying on the same locked Newsreader/H3 weight. */
+.title {
+  font-family: var(--font-serif);
+  font-weight: var(--weight-h3);
+  font-size: clamp(1.75rem, 3.2vw, 2.75rem);
+  line-height: var(--leading-h3);
+  color: var(--foreground);
+}
+
+@media (max-width: 767px) {
+  .descriptor {
+    text-align: left;
+  }
+}
+
+/* Desktop-only composition scale-up, matching audio-active-item.png: the
+   active release needs to dominate the viewport, with only a partial sliver
+   of its neighbours visible — the previous narrow fixed card slot left too
+   much of the previous/next release comfortably readable. Scoped to the
+   same 1024px breakpoint Music.tsx uses for the pinned interaction, so
+   mobile/tablet's native-scroll card geometry is untouched.
+
+   --music-card-width and --music-disc-size feed the JS-side scroll-distance
+   math (track.scrollWidth / wrapper.clientWidth) and the padding-inline
+   centering formula above automatically — nothing here needs to know about
+   or duplicate that math. Disc size is deliberately left alone: the
+   mismatch is the overall composition/dominance, not the vinyl diameter,
+   which was already close to the reference. */
+@media (min-width: 1024px) {
+  .wrapper {
+    --music-card-width: clamp(520px, 44vw, 760px);
+  }
+
+  .track {
+    /* Wide enough that a neighbour's center sits mostly outside the
+       viewport when the current record is centered — only a partial edge
+       fragment remains, not a fully readable second release. */
+    gap: clamp(10rem, 20vw, 22rem);
+  }
+
+  .card {
+    gap: 1.5rem;
+  }
+
+  /* Reference active titles ("The Family Tree: The Roots") run large
+     enough to be the dominant visual element of the composition, wrapping
+     naturally onto two lines for longer titles rather than staying on one
+     cramped line or being forced smaller to fit. max-width caps the wrap
+     point so a title like "Mum's Garage Radio" breaks the way the
+     reference's own multi-word titles do, instead of stretching edge to
+     edge of the (now much wider) card. */
+  .title {
+    font-size: clamp(2.75rem, 5.5vw, 5rem);
+    max-width: 17ch;
+  }
+}
