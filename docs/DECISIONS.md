@@ -240,3 +240,77 @@ Phase 2 visual audit could not confirm the inactive/idle square-sleeve state of 
 The existing vinyl/sleeve card architecture in MASTER_SPEC.md Section 11 is retained unchanged; it is not revised on the basis of this screenshot ambiguity alone.
 
 Exact visual proportions are deferred to Phase 6 implementation, to be verified against both the reference video analysis and the screenshots.
+
+2026-08-25 — Phase 5 and Phase 6 implementation decisions recorded retroactively
+
+The seven entries below were decided during Phase 5 and Phase 6 implementation (2026-08-14 and 2026-08-21) and were logged in docs/PROGRESS.md at the time, but were never transferred into this decision log. They are recorded here now, during the macOS-to-Windows repository housekeeping pass, under the dates they were actually made — not under today's date.
+
+Nothing here is a new decision. Each entry restates an already-accepted implementation choice that is live in the checked-out code.
+
+2026-08-14 — Hero status card corner radius set to 10px
+
+Resolves the "2026-08-13 — Hero card corner radius" deferral, which locked the radius qualitatively (small/subtle, not sharp, not a full pill) and deferred the exact value to Phase 5.
+
+Phase 5 visually tuned it against references/screenshots/hero-default.png and settled on 10px.
+
+Live in frontend/app/components/Hero.module.css.
+
+2026-08-14 — Music card composition corrected to circular vinyl disc
+
+Supersedes "2026-08-13 — Music card architecture retained pending Phase 6", which retained the square-sleeve wording specifically because the screenshots then available could not confirm the inactive/idle state.
+
+references/screenshots/audio-initial.png and audio-active-item.png show a circular grooved disc with the artwork inset as a round label. They do not show a square 1:1 sleeve, and they do not show a disc "protruding" from a sleeve. That phrasing in MASTER_SPEC.md Section 11 predated these screenshots.
+
+Accepted composition: repeating-radial-gradient groove rings forming a circular disc, with a circular artwork label clipped into the center.
+
+This one composition is applied identically to every item. Active and inactive items differ only in scale, opacity, and rotation state — never in composition. No second, unobserved "sleeve" treatment was invented for inactive items.
+
+Exact disc/label proportions remain subject to later visual polish.
+
+MASTER_SPEC.md Section 11 was corrected to match on 2026-08-25.
+
+2026-08-14 — Desktop Music pinning begins at 1024px; tablet and mobile use native horizontal scrolling
+
+The GSAP pin/scrub tween is created only when (min-width: 1024px) matches AND prefers-reduced-motion does not.
+
+Tablet (768–1023px) therefore gets the same native overflow-x + scroll-snap fallback as mobile, rather than inheriting desktop pinning. This follows MASTER_SPEC.md Section 8's own instruction not to preserve desktop pinning at tablet widths if it harms usability.
+
+Reduced-motion gets the native fallback at every viewport width, desktop included.
+
+The breakpoint is not duplicated in CSS. A single data-pinned attribute, set by the JS only at the moment GSAP actually activates pinning, gates every pin-specific CSS rule — so there is one source of truth for "is the pinned interaction running", not two that can drift.
+
+2026-08-21 — Music active/inactive emphasis uses a two-state model
+
+Supersedes the continuous quadratic falloff used in the original 2026-08-14 Phase 6 implementation, which put both cards at roughly 0.62 scale / 0.36 opacity at the exact midpoint between two centers — a long, faint valley with no substantial release on screen.
+
+Accepted model: a card holds a stable muted state (scale 0.7, opacity 0.35) across most of its territory, and transitions to the active state (scale 1, opacity 1) only through a narrow smoothstep-eased band around the crossover point, sized at 0.22 of the spacing between adjacent card centers.
+
+These values are specific to the Music section. They deliberately do not reuse the gallery's 0.75 scale / 0.4 opacity figures; those remain the Stage & Visuals values in MASTER_SPEC.md Section 13 and are unaffected.
+
+Vinyl rotation is not part of this model — it stays driven by the discrete "closest card" marker, so only the genuinely active record spins.
+
+Deferred, non-blocking: later polish may sharpen the handoff slightly to sit closer to the reference.
+
+2026-08-21 — Music ruler positioned at the title/year row
+
+The ruler/tick axis originally cut through the vinyl disc area. Manual comparison against the reference showed the axis sits substantially lower, around the title/year region of the active item, matching references/screenshots/audio-active-item.png.
+
+The ruler was also rebuilt from a single CSS repeating-linear-gradient into individually-styled DOM tick elements, because per-tick emphasis cannot be animated out of a gradient.
+
+2026-08-21 — Music ruler falloff accepted as symmetric; exact reference profile deferred
+
+The reference's own tick-emphasis falloff read as asymmetric — a trailing tail behind the currently-passed position — on close inspection of paused video frames.
+
+A symmetric falloff of the same width and character is used instead, deliberately, so reverse scroll is guaranteed to mirror forward scroll exactly. A genuinely direction-locked trail would require layering scroll-velocity tracking onto the pin/scrub trigger, and the footage alone is ambiguous as to whether the reference's shape is direction-locked or a fixed spatial pattern.
+
+Accepted as-is. Matching the reference profile more exactly is optional later polish, not a blocker.
+
+2026-08-21 — Music scroll pace uses a 1.6 multiplier over the measured track distance
+
+Manual browser testing showed a strict 1:1 mapping between scroll distance and horizontal travel consumed the entire pin range in a single ordinary scroll gesture, skipping past the records rather than moving through them.
+
+Accepted: a 1.6 multiplier applied to the real, measured track distance when computing the trigger's end.
+
+The multiplier scales the measured distance; it does not replace it. The underlying distance is still read live from the DOM, never hard-coded to a pixel count, so the pacing stays correct if the track's content changes.
+
+Also settled in the same repair: scrub tuned from 1 to 0.5, and anticipatePin: 1 added.

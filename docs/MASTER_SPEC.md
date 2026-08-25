@@ -841,13 +841,19 @@ All items use the same reference-derived card grammar.
 
 Default:
 
-square 1:1 artwork sleeve
+circular vinyl-disc composition — a grooved disc is the card's primary form
 
-protruding vinyl-disc treatment for active item
+circular artwork label centered within the disc
 
 metadata below
 
 reference-style pill action
+
+Every item uses this same composition. Active and inactive items differ only in scale, opacity, and rotation state — never in composition. There is no separate square-sleeve treatment for inactive items.
+
+Exact disc/label proportions, card width, and card gap remain subject to later visual polish against the reference.
+
+Corrected 2026-08-25 — see docs/DECISIONS.md "Music card composition corrected to circular vinyl disc". The prior "square 1:1 artwork sleeve / protruding vinyl-disc treatment for active item" wording predated references/screenshots/audio-initial.png and audio-active-item.png, which show a circular grooved disc with an inset round artwork label and no square sleeve.
 
 Do not introduce a cassette motif.
 

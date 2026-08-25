@@ -1,12 +1,14 @@
 Temikaze Website — Progress
 
-Last updated: 2026-08-21
+Last updated: 2026-08-25
 
 Current state
 
-Implementation status: Phase 6 accepted in its current state (2026-08-21) after a multi-round repair. Manual browser testing confirmed the core desktop pinned interaction works. See "Phase 6 accepted state" and "Phase 6 repair log" below for what changed and "Deferred Phase 6 polish" / "Deferred asset/content work" for what's explicitly carried forward, non-blocking.
+Implementation status: Phase 6 accepted in its current state (2026-08-21) after a multi-round repair, and since committed and pushed (3887173, 2026-08-25). Manual browser testing confirmed the core desktop pinned interaction works. See "Phase 6 accepted state" and "Phase 6 repair log" below for what changed, and "Deferred Phase 6 polish" / "Deferred asset/content work" for what is explicitly carried forward, non-blocking.
 
-Current approved phase: Phase 6 accepted. Phase 7 has not yet been approved to begin — see Next action.
+Current approved phase: Phase 6 accepted, committed, and pushed. Phase 7 — Practice — is next and has not yet been approved to begin. See Next action.
+
+Development machine: moved from macOS to Windows on 2026-08-25. See "Repository housekeeping — macOS to Windows migration" below for what that changed — notably, the WordPress installation on this machine holds no sample records (re-seeding deferred to Phase 10), and the reference .mov recordings are not present locally.
 
 What is already done
 
@@ -36,7 +38,7 @@ Confirmed: .mov reference files are ignored by Git (references/*.mov in root .gi
 
 Confirmed: Git working tree was clean for all tracked files prior to Phase 1 work.
 
-Confirm remote push status if remote repository is being used. (Still unconfirmed — no remote checked.)
+Confirmed (2026-08-25): remote is https://github.com/Wakarende/Temikaze.git; branch master is in sync with origin/master at commit 3887173.
 
 Confirmed: CLAUDE.md and all docs/ files are present in the repo.
 
@@ -466,6 +468,8 @@ The Hero sticky-card fragment overlapping the Hero → Music transition, documen
 
 Phase 6 changes remain uncommitted: frontend/app/globals.css, frontend/app/page.tsx, frontend/package.json, frontend/package-lock.json modified; frontend/app/components/Music.tsx, Music.module.css, musicData.ts and frontend/public/images/music/ untracked.
 
+Superseded (2026-08-25): the sentence above was accurate on 2026-08-21 and is left as written. All Phase 5 and Phase 6 work was subsequently committed as 3887173 and pushed; master is in sync with origin/master. See "Repository housekeeping — macOS to Windows migration" below.
+
 Phase 6 repair log (2026-08-21)
 
 Status: repair complete. Superseded by "Phase 6 accepted state" below.
@@ -592,7 +596,62 @@ Superseded (2026-08-21): manual browser verification found the core pinned/scrub
 
 Superseded again (2026-08-21): repaired across several rounds (see "Phase 6 repair log") and reverified by manual browser testing, which confirmed the core desktop interaction — forward/reverse scroll, entrance/exit choreography, pinned header, active/inactive states, ruler — now works. See "Phase 6 accepted state." Remaining polish items are recorded as deferred, non-blocking (see "Deferred Phase 6 polish" and "Deferred asset/content work").
 
+Repository housekeeping — macOS to Windows migration (2026-08-25)
+
+Status: complete. Documentation-only. No frontend implementation file was changed.
+
+Development moved from the original macOS machine to a Windows machine. This pass reconciled the checked-out repository with the accepted project state. Nothing in the implementation was altered — only documentation, plus reverting three unintentional tooling changes.
+
+Commit and push state (corrects the stale "Phase 6 changes remain uncommitted" note in the FAILED section above):
+
+Phase 5 and Phase 6 work was committed as 3887173 "work on audio section" (2026-08-25), which also committed the Phase 6 FAILED, repair, and accepted-state records into this file.
+
+Branch master is in sync with origin/master (https://github.com/Wakarende/Temikaze.git) at 3887173 — verified, HEAD and origin/master resolve to the same commit. This also settles the previously open "Confirm remote push status" item in "Repository checks still required before coding" above.
+
+Tooling changes reverted (git restore; no dependency was added, removed, or upgraded):
+
+frontend/package.json — the TypeScript specifier had been rewritten from "^5" to "5.9.3". Restored to "^5". The TypeScript already installed in node_modules is 5.9.3, which satisfies "^5", so nothing needed reinstalling.
+
+frontend/package-lock.json — the matching specifier change, plus an added "license": "Apache-2.0" field on the typescript entry. Restored.
+
+frontend/tsconfig.json — formatting only (arrays expanded to multi-line by an editor formatter). Restored.
+
+None of these were project decisions; they were side effects of setting the project up on Windows. Worth watching: Next.js pins an exact TypeScript version when it auto-installs TypeScript, so the package.json specifier may be rewritten again if node_modules is ever cleared.
+
+Local environment on the Windows machine:
+
+Node is v22.21.1, npm 10.8.2. This retires the Phase 1 EBADENGINE warning (eslint-visitor-keys@5.0.1 requesting Node ^20.19.0 || ^22.13.0 || >=24 against the old machine's Node v20.11.1). It is no longer an active local-development issue. Node version for CI/deployment should still be set deliberately at Phase 14, but not because of this warning.
+
+npm run lint passes clean on this machine.
+
+WordPress: a Studio site exists at C:\Users\joyki\Studio\temikaze-cms and is running on http://localhost:8881. The temikaze-cms plugin is present as a native Windows directory junction pointing at wordpress/temikaze-cms in this repo, and is activated.
+
+All five REST endpoints (/wp-json/wp/v2/artist_profile, /releases, /mixes, /events, /gallery) return HTTP 200 — so the plugin registers correctly on this machine — but every one returns an empty array. The Phase 3 sample records (artist_profile #5 "Temikaze", releases #6 "Nia", mixes #7 "Mum's Garage Radio") do not exist in this installation's database, and wp-content/uploads contains no files.
+
+Re-seeding is deliberately deferred to Phase 10. The frontend still uses static local data (frontend/app/components/musicData.ts, plus hard-coded Hero content) and does not read from WordPress at all, so the empty CMS blocks nothing between here and Phase 10. Phase 10 will need the sample content recreated before it can wire real REST data.
+
+Reference videos are not present on this machine:
+
+references/ contains only the six PNG screenshots. No .mov files exist anywhere in the working tree. The reference recordings are git-ignored (references/*.mov in the root .gitignore) and were local-only to the original macOS machine.
+
+This matters because some accepted work cites them as its evidence: the Phase 6 repair log's ruler falloff analysis, the tick-geometry comment in Music.tsx citing references/LandingPage-Desktop.mov at roughly t=32-46s, and the 2026-08-13 decision deferring Music card proportions "to be verified against both the reference video analysis and the screenshots."
+
+Nothing already accepted needs re-verification because of this. But future work that would need to re-check motion timing or falloff against the video — including the deferred ruler polish — cannot be evidenced on this machine until the recordings are restored.
+
+Documentation corrected in this pass:
+
+docs/MASTER_SPEC.md Section 11 — the "square 1:1 artwork sleeve / protruding vinyl-disc treatment for active item" card architecture, which contradicted both the accepted implementation and the screenshot evidence, was replaced with the circular vinyl-disc composition. Scoped to that block only; the rest of Section 11, and the rest of the spec, are untouched.
+
+docs/DECISIONS.md — seven Phase 5/6 implementation decisions that until now existed only in this file were transferred into the decision log under the dates they were actually made (2026-08-14 and 2026-08-21), with a preamble noting the retroactive recording. Purely additive; no existing entry was rewritten.
+
+Not addressed in this pass, by instruction: WordPress sample content, audio implementation, the Nia artwork, Hero source-asset quality, the Hero to Music sticky-card overlap, and Phase 7 itself.
+
 Next action
 
-Phase 6 is accepted in its current state. Begin Phase 7 — Practice — only after explicit approval, per the working method in CLAUDE.md. Deferred Phase 6 polish and asset/content items (see above) do not block this.
+Phase 6 is accepted, committed (3887173), and pushed; master and origin/master are in sync.
 
+Phase 7 — Practice — is next. It must not begin without explicit approval, per the working method in CLAUDE.md.
+
+Not blocking Phase 7: deferred Phase 6 polish (handoff timing, ruler falloff, final visual calibration), deferred asset/content work (Nia artwork, audio), the Hero to Music sticky-card overlap, and the empty WordPress installation on this machine (deferred to Phase 10).
+
+Uncommitted as of this entry: the documentation changes from the 2026-08-25 housekeeping pass (this file, docs/DECISIONS.md, docs/MASTER_SPEC.md). No frontend implementation file is modified.
