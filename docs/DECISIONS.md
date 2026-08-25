@@ -314,3 +314,25 @@ Accepted: a 1.6 multiplier applied to the real, measured track distance when com
 The multiplier scales the measured distance; it does not replace it. The underlying distance is still read live from the DOM, never hard-coded to a pixel count, so the pacing stays correct if the track's content changes.
 
 Also settled in the same repair: scrub tuned from 1 to 0.5, and anticipatePin: 1 added.
+
+2026-08-25 — Practice does not reproduce the reference's sticky-left / scrolling-right interaction
+
+Direct inspection of references/LandingPage-Desktop.mov (the WRITTEN section, roughly t=50-59 s) confirmed a behaviour not previously recorded in the spec: in the reference, the section header row and the entire left featured block hold position while the right-hand column scrolls independently beneath them. Two frames roughly seven seconds apart show the header and left block pixel-identical while the right column has advanced by two items. This is the reference section's signature interaction.
+
+It is deliberately not reproduced in Temikaze's Practice section.
+
+Reason: the reference's right column carries four or more entries, which gives the sticky range something to travel through. Practice has exactly two — Producer and Curator. With two items the right column is barely taller than the left block, so the interaction would have no meaningful range, and manufacturing range would mean inventing Temikaze content, which project rules forbid.
+
+Practice is therefore a static editorial layout. No sticky section-header system was introduced either.
+
+This can be reconsidered during final homepage polish if the Practice content grows enough to give the interaction real range. It is recorded here so a later reader does not mistake its absence for an oversight.
+
+2026-08-25 — Practice featured role title is scaled above the Role H3 token
+
+MASTER_SPEC.md Section 5 assigns "Item / Role H3" to Newsreader at clamp(1.5rem, 2.5vw, 2.2rem). Applied uniformly, that token would render DJ, Producer and Curator at identical size and flatten the reference's featured-versus-list hierarchy, in which the featured title reads at roughly 0.9x the section heading while the list titles sit well below it.
+
+Accepted: the right-column role titles (Producer, Curator) use the Role H3 token unchanged. The left featured title (DJ) uses a component-local clamp(2.5rem, 5vw, 4.5rem).
+
+This is a component-local size in Practice.module.css. No global typography token was added or changed. The precedent is Header.module.css, which already sets a component-local wordmark size rather than reusing --text-hero.
+
+Known consequence, accepted for now: our featured-title-to-list-title ratio is roughly 0.49, against roughly 0.70 in the reference, because the Role H3 cap holds the list titles down. Closing that gap would require raising a locked global token and is left to a later decision rather than taken unilaterally during Phase 7.

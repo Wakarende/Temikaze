@@ -1,0 +1,135 @@
+.practice {
+  background: var(--background);
+  padding-block: var(--section-spacing);
+}
+
+.headerRow {
+  padding-block: 1.5rem;
+  border-bottom: var(--divider);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: var(--weight-h2);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+/* Desktop editorial grid. The 47/53 split places the vertical dotted rule
+   where the reference puts it — measured off written-editorial-grid.png,
+   where the rule sits at ~47% of the content width, not at a true 50%. */
+.grid {
+  display: grid;
+  grid-template-columns: 47fr 53fr;
+}
+
+/* min-width: 0 on both cells: grid items default to min-width: auto, which
+   lets long unbreakable content force a track wider than its share and push
+   the page into horizontal overflow. Same class of bug fixed in Phases 4
+   and 5; set here deliberately rather than discovered later. */
+.featured,
+.supporting {
+  min-width: 0;
+}
+
+/* Featured DJ block — centered on both axes, per the locked
+   "Practice primary block center-aligned" decision (DECISIONS.md). */
+.featured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  padding-block: clamp(3rem, 8vw, 7rem);
+  padding-inline: clamp(1rem, 3vw, 3rem);
+}
+
+.featuredTitle {
+  font-family: var(--font-serif);
+  font-weight: var(--weight-h3);
+  /* Stepped up from the Role H3 token to reproduce the reference's
+     featured-vs-list hierarchy, where the featured title reads at roughly
+     0.9x the section heading while list titles sit well below it. This is
+     a component-local size, not a new global typography token. */
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: var(--leading-h3);
+  color: var(--foreground);
+}
+
+.featuredBody {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--foreground);
+  max-width: 26ch;
+}
+
+/* Right column. The vertical dotted rule is this column's own left border,
+   so it spans exactly the grid row height with no extra element and no
+   height guesswork. */
+.supporting {
+  border-left: var(--divider);
+  padding-left: clamp(1.5rem, 5vw, 4.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.role {
+  padding-block: clamp(2rem, 5vw, 4rem);
+  /* Text sits further in than the item rule's own start, matching the
+     reference, where the horizontal item rules begin to the left of the
+     item text rather than aligning with it. */
+  padding-left: clamp(0.5rem, 2vw, 3.5rem);
+}
+
+.role + .role {
+  border-top: var(--divider);
+}
+
+.roleTitle {
+  font-family: var(--font-serif);
+  font-weight: var(--weight-h3);
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  color: var(--foreground);
+}
+
+.roleBody {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--foreground);
+  max-width: 46ch;
+  margin-top: 0.75rem;
+}
+
+/* Mobile: single column, DJ -> Producer -> Curator, horizontal dotted rules
+   between roles, vertical rule removed (MASTER_SPEC Section 12). */
+@media (max-width: 767px) {
+  .grid {
+    display: block;
+  }
+
+  .featured {
+    padding-block: clamp(2rem, 8vw, 3rem);
+    padding-inline: 0;
+  }
+
+  .supporting {
+    border-left: none;
+    border-top: var(--divider);
+    padding-left: 0;
+  }
+
+  .role {
+    padding-left: 0;
+    padding-block: clamp(1.75rem, 7vw, 2.5rem);
+  }
+}

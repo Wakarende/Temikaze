@@ -4,9 +4,9 @@ Last updated: 2026-08-25
 
 Current state
 
-Implementation status: Phase 6 accepted in its current state (2026-08-21) after a multi-round repair, and since committed and pushed (3887173, 2026-08-25). Manual browser testing confirmed the core desktop pinned interaction works. See "Phase 6 accepted state" and "Phase 6 repair log" below for what changed, and "Deferred Phase 6 polish" / "Deferred asset/content work" for what is explicitly carried forward, non-blocking.
+Implementation status: Phase 7 — Practice — complete (2026-08-25). Phase 6 remains accepted in its current state (2026-08-21) after a multi-round repair, committed and pushed (3887173). See the Phase 7 log for what was built and verified this phase, "Phase 6 accepted state" and "Phase 6 repair log" for Phase 6, and "Deferred Phase 6 polish" / "Deferred asset/content work" for what is carried forward, non-blocking.
 
-Current approved phase: Phase 6 accepted, committed, and pushed. Phase 7 — Practice — is next and has not yet been approved to begin. See Next action.
+Current approved phase: Phase 7 complete, uncommitted. Phase 8 — Stage & Visuals — is next and has not yet been approved to begin. See Next action.
 
 Development machine: moved from macOS to Windows on 2026-08-25. See "Repository housekeeping — macOS to Windows migration" below for what that changed — notably, the WordPress installation on this machine holds no sample records (re-seeding deferred to Phase 10), and the reference .mov recordings are not present locally.
 
@@ -56,7 +56,7 @@ Phase 5 — Hero — Complete (2026-08-14)
 
 Phase 6 — Music & Mixes — Accepted (2026-08-21): originally marked complete 2026-08-14, reopened the same day after manual browser verification found the pinned horizontal scroll broken, repaired across several rounds, then re-verified by manual browser testing and accepted in its current state. See "Phase 6 accepted state" below.
 
-Phase 7 — Practice
+Phase 7 — Practice — Complete (2026-08-25)
 
 Phase 8 — Stage & Visuals
 
@@ -638,6 +638,8 @@ This matters because some accepted work cites them as its evidence: the Phase 6 
 
 Nothing already accepted needs re-verification because of this. But future work that would need to re-check motion timing or falloff against the video — including the deferred ruler polish — cannot be evidenced on this machine until the recordings are restored.
 
+Resolved (2026-08-25, during Phase 7): the recordings have since been restored locally. references/ now contains both LandingPage-Desktop.mov (197 MB, 96.25 s, 2874x1572) and AudioPage-Desktop.mov (243 MB). Both remain git-ignored and local-only by design. The three paragraphs above are left as written because they were accurate when recorded; they no longer describe the current machine. Phase 7 used LandingPage-Desktop.mov directly as reference evidence.
+
 Documentation corrected in this pass:
 
 docs/MASTER_SPEC.md Section 11 — the "square 1:1 artwork sleeve / protruding vinyl-disc treatment for active item" card architecture, which contradicted both the accepted implementation and the screenshot evidence, was replaced with the circular vinyl-disc composition. Scoped to that block only; the rest of Section 11, and the rest of the spec, are untouched.
@@ -646,12 +648,90 @@ docs/DECISIONS.md — seven Phase 5/6 implementation decisions that until now ex
 
 Not addressed in this pass, by instruction: WordPress sample content, audio implementation, the Nia artwork, Hero source-asset quality, the Hero to Music sticky-card overlap, and Phase 7 itself.
 
+Phase 7 log — Practice (2026-08-25)
+
+Status: Complete.
+
+Files created:
+
+frontend/app/components/Practice.tsx — the Practice section: a heading-only header row, then a two-column editorial grid. Left column is the featured DJ block; right column stacks Producer and Curator. Producer and Curator live in a small SUPPORTING_ROLES array; DJ is written out separately because it is the featured block with its own centered treatment, mirroring the reference's featured/list split.
+
+frontend/app/components/Practice.module.css — all Practice styling: header row and its dotted rule, the 47/53 desktop grid, the centered featured block, the right-hand role stack with its dividers, and the mobile single-column overrides.
+
+Files modified:
+
+frontend/app/page.tsx — the practice placeholder replaced with the Practice component, and "practice" removed from PLACEHOLDER_SECTIONS. Visuals and Booking are untouched, still Phase 4 placeholders.
+
+No other file was modified. Hero, Music, Header, globals.css, page.module.css, and the WordPress plugin were not touched. No dependency was added.
+
+Content used (exactly the copy supplied this phase, nothing invented, nothing extrapolated): heading "Practice"; DJ — "Nairobi-based House and Afro House DJ."; Producer — "Temikaze's releases include Nia, Let Go and Gone, alongside No Fears with Aleree."; Curator — "Temikaze co-founded TG & fRenz with Gigi." No descriptor line, and no venues, dates, achievements, résumé detail, or mission statement was added.
+
+Reference evidence used: references/screenshots/written-editorial-grid.png, plus frames extracted directly from references/LandingPage-Desktop.mov (the WRITTEN section, roughly t=50-59 s). ffmpeg is not installed on this machine; frames were extracted with the installed VLC via its scene video filter. Note for future phases: VLC's scene filter silently produces zero frames when combined with --vout=dummy; it works with -I dummy --play-and-exit and no vout override.
+
+Deliberate departures from the reference, each instructed this phase, each recorded so they do not read later as oversights:
+
+No section descriptor and no "view all". The reference header row carries both. No descriptor copy exists, and Practice has no archive for a "view all" to point at, so the header row is heading-only. This leaves the right side of our header row emptier than the reference's.
+
+No sticky-left / independently-scrolling-right interaction. This is the reference section's signature behaviour and was directly confirmed on video (see the DECISIONS.md entry of this date). Not reproduced: Temikaze has two right-column items against the reference's four-plus, so the interaction would have no meaningful scroll range, and inventing filler content to create range is not permitted.
+
+No sticky section-header system was added this phase.
+
+No imagery, no colored category dots, no hover underline, no links, no pills. The reference's items are links with an animated underline on hover and colored category dots; Temikaze's three roles have no destinations and are not a taxonomy, so they are rendered as editorial text. MASTER_SPEC Section 6 also restricts the three colored dots to Hero status markers.
+
+Implementation notes worth keeping:
+
+The vertical dotted rule is the right column's own border-left rather than a separate element, so it spans exactly the grid row height with no height guesswork, and it disappears correctly at mobile by simply being unset.
+
+The right column's item rules begin to the left of the item text, matching the reference. This is achieved by putting padding-left on the right column (which the rules span) and additional padding-left on each role block (which only the text respects), rather than by positioning the rules independently.
+
+min-width: 0 was set on both grid children up front. Grid items default to min-width: auto, which lets long content force a track wider than its share and push the page into horizontal overflow — the same class of bug found and fixed during Phases 4 and 5. Set deliberately here rather than discovered later.
+
+Tests/checks run:
+
+npm run lint — passed clean, run twice: once on the first implementation, once on the final code after all instrumentation was removed.
+
+npx tsc --noEmit — exit 0, at both those points.
+
+npm run build — passed clean, twice; only the expected routes (/, /_not-found) generated.
+
+npm run dev plus curl — HTTP 200; grepped the served HTML directly and confirmed id="practice", the Practice heading, all three role titles, and all three body strings are present and server-rendered.
+
+Headless-Chrome screenshots at desktop (1440px) and mobile, viewed directly and compared against references/screenshots/written-editorial-grid.png.
+
+Measured DOM geometry rather than eyeballing it, by temporarily injecting a script that reported getBoundingClientRect for every Practice element plus document.scrollWidth, then removing it. Desktop at innerWidth 1424: content spans x=57 to x=1367, and the vertical rule sits at x=673 — 47.0% of content width, matching the position measured off the reference screenshot. document.scrollWidth equals innerWidth at both 1424 and 500, confirming no horizontal overflow.
+
+Reduced motion: Practice adds no animation of any kind, so there is nothing for prefers-reduced-motion to disable. Verified incidentally — the final desktop screenshot was captured with Chrome's --force-prefers-reduced-motion flag and Practice renders identically.
+
+Testing-tooling finding, worth recording because it cost real time: Chrome headless on this machine enforces a minimum window width of 500px, in both --headless=new and --headless=old. Passing --window-size=375,900 renders the page at innerWidth 500 and then writes a 375px-wide PNG, cropping the right 125px. This looked exactly like a mobile text-overflow bug — role body copy appeared clipped at the right edge — and was chased as one. Measuring innerWidth is what disproved it. A genuine 375px layout viewport was then obtained by loading the page in a 375px-wide iframe inside a wider headless window, which confirmed the mobile layout is correct and has no clipping. Future mobile screenshot work on this machine must use the iframe technique or it will produce false overflow reports.
+
+Visually checked against references/screenshots/written-editorial-grid.png:
+
+Matching: display heading hard-left in Barlow Condensed 900 uppercase; full-bleed dotted rule beneath the header row; vertical dotted rule at 47% of content width; left featured block centered on both axes; right column left-aligned with dotted rules between items that begin left of the item text; cream canvas and near-black text; serif titles over Inter body; no imagery; restrained, unornamented composition.
+
+Remaining differences, honestly stated:
+
+1. Right-column role titles are proportionally smaller than the reference's list titles. The reference's featured-title-to-list-title ratio is roughly 0.70; ours is roughly 0.49 (35px against 72px at desktop). This is deliberate: MASTER_SPEC Section 5 caps the "Item / Role H3" role at 2.2rem, and that token is used unchanged. Closing the gap would mean raising a locked global token, which is outside this phase.
+
+2. The header row is emptier on the right than the reference's, which carries a descriptor and a "view all". Instructed.
+
+3. More vertical space above the heading than the reference has, because our sections do not use the reference's sticky-header swap that butts consecutive sections together. Practice uses the locked --section-spacing token.
+
+4. The section is much shorter than the reference's, having two right-column items against four-plus. Inherent to the real content.
+
+5. The reference's item-rule-to-text offset is larger than ours — roughly 55px against our 28px at desktop. Minor calibration, left for the final polish pass.
+
+6. Barlow Condensed 900's letterforms remain rounder and more open than Druk's. Unchanged, accepted since Phase 2, not addressable at the layout level.
+
+Observation, not introduced by this phase and not fixed here: loading /#practice directly at desktop can land above the Practice section. Music's ScrollTrigger pin inserts spacer height after the browser has already performed the initial hash scroll, so the anchor target moves down afterwards. It was seen once during headless capture and worked around by capturing with reduced motion, which disables Music's pin. It should affect #visuals and #booking equally, is rooted in Music's pin rather than in anything in Practice, and would require touching Music to fix — explicitly out of scope this phase. Worth confirming in a real browser before deciding whether it needs addressing.
+
+Acceptance criteria (MASTER_SPEC Section 12): three roles only — pass. Copy is factual — pass, only supplied copy is used. Grid mirrors the reference editorial structure — pass. No fake articles — pass. No animated dotted-rule drawing — pass; all rules are static CSS borders with no animation anywhere in the component. Mobile stack is clean and readable — pass, verified at a genuine 375px viewport.
+
 Next action
 
-Phase 6 is accepted, committed (3887173), and pushed; master and origin/master are in sync.
+Phase 7 — Practice — is complete (2026-08-25), verified by lint, typecheck, build, measured DOM geometry, and desktop/mobile screenshot comparison against the reference. See the Phase 7 log above for what was verified and what visual differences remain.
 
-Phase 7 — Practice — is next. It must not begin without explicit approval, per the working method in CLAUDE.md.
+Phase 8 — Stage & Visuals — is next. It must not begin without explicit approval, per the working method in CLAUDE.md.
 
-Not blocking Phase 7: deferred Phase 6 polish (handoff timing, ruler falloff, final visual calibration), deferred asset/content work (Nia artwork, audio), the Hero to Music sticky-card overlap, and the empty WordPress installation on this machine (deferred to Phase 10).
+Not blocking Phase 8: deferred Phase 6 polish (handoff timing, ruler falloff, final visual calibration), deferred Phase 7 calibration (item-rule offset, role-title scale relative to the reference), deferred asset/content work (Nia artwork, audio), the Hero to Music sticky-card overlap, the /#practice anchor landing observation recorded in the Phase 7 log, and the empty WordPress installation on this machine (deferred to Phase 10).
 
-Uncommitted as of this entry: the documentation changes from the 2026-08-25 housekeeping pass (this file, docs/DECISIONS.md, docs/MASTER_SPEC.md). No frontend implementation file is modified.
+Uncommitted as of this entry: frontend/app/components/Practice.tsx, frontend/app/components/Practice.module.css (both new), frontend/app/page.tsx (modified), and the documentation updates in this file and docs/DECISIONS.md. Not committed or pushed, per instruction.
