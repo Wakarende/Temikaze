@@ -1,0 +1,282 @@
+.section {
+  /* Item-box geometry, derived from the reference VISUAL section: the active
+     box is ~28% of viewport width and ~53% of viewport height. */
+  --gallery-box-w: clamp(240px, 28vw, 420px);
+  --gallery-box-h: clamp(300px, 48vh, 560px);
+
+  background: var(--background);
+  padding-block: var(--section-spacing);
+}
+
+.headerRow {
+  padding-block: 1.5rem;
+  border-top: var(--divider);
+  border-bottom: var(--divider);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-weight: var(--weight-h2);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+/* Full-bleed rather than container-width: in the reference the flanking images
+   run off both screen edges. overflow: hidden is what keeps them out of the
+   page's scroll width. */
+.viewport {
+  position: relative;
+  height: clamp(320px, 52vh, 600px);
+  margin-top: clamp(2.5rem, 6vw, 5rem);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.viewport:focus-visible {
+  outline: 2px solid var(--focus-light);
+  outline-offset: 4px;
+}
+
+/* Width probe for the geometry maths in StageVisuals.tsx. Carries the item box
+   width but is never transformed, so it always reports the true box width
+   regardless of which item is currently active. */
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--gallery-box-w);
+  height: var(--gallery-box-h);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  height: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Every slot is pinned to the same point and pushed out by an inline transform
+   written from JS. Anchoring at top/left 50% with a -50% translate is what
+   gives every item the shared vertical centre axis the reference maintains,
+   including mid-transition.
+
+   No CSS transition here on purpose: position, scale, opacity and grayscale
+   are all driven imperatively by the navigation tween. A CSS transition would
+   animate the off-screen wrap of a recycled slot straight across the viewport,
+   which is exactly the visible reset the continuous gallery must not have. */
+.item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--gallery-box-w);
+  height: var(--gallery-box-h);
+  transform-origin: center center;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity, filter;
+}
+
+/* Static fallback for the server-rendered markup, the instant before
+   hydration, and the no-JavaScript case: show the first item of the middle
+   repeat, centred and unscaled, instead of a stack of eighteen overlapping
+   slots. Once the component has measured, render() writes transform, opacity,
+   filter and visibility inline for every slot and those inline values win. */
+.track .item:nth-child(7) {
+  opacity: 1;
+  visibility: visible;
+}
+
+.itemButton {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.itemButton:focus-visible {
+  outline: 2px solid var(--focus-light);
+  outline-offset: 6px;
+}
+
+/* contain, never cover: the reference fits each work inside a shared box and
+   preserves its natural aspect ratio rather than cropping everything to one
+   shape. The approved set mixes 3:4 and 1:1, which this handles without any
+   crop. */
+.image {
+  object-fit: contain;
+  object-position: center;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+}
+
+/* Resting appearance is unchanged from before the micro-interaction was added.
+   line-height moved from 1 to 1.25 so the descender in "prev" is not clipped
+   by the label mask, with padding-block reduced to compensate: the pill's
+   total height is 0.6 + 0.6 + (0.85 x 1.25) = 2.2625rem against the previous
+   0.7 + 0.7 + 0.85 = 2.25rem — a 0.2px difference. */
+.pill {
+  font-family: var(--font-sans);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  letter-spacing: var(--tracking-button);
+  line-height: 1.25;
+  color: var(--foreground-light);
+  background: var(--foreground);
+  border: 1px solid var(--foreground);
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* No hover state. The reference has no hover treatment on these controls, so
+   the pill is visually identical at rest and under the pointer — same
+   background, text, border, scale, position, opacity and label placement. The
+   only visual change comes from actually activating the control (click, Enter
+   or Space), which runs the squash and label roll below.
+
+   :focus-visible is deliberately unchanged, so keyboard focus stays visibly
+   identifiable. The colour transition is retained for that state alone. */
+.pill:focus-visible {
+  background: var(--background);
+  color: var(--foreground);
+  outline: 2px solid var(--focus-light);
+  outline-offset: 3px;
+}
+
+/* The pill is the clipping boundary for the label roll — the mask is exactly
+   one line tall, so a label can never be seen outside the black pill. */
+.labelMask {
+  display: block;
+  overflow: hidden;
+  height: 1.25em;
+}
+
+.roll {
+  display: block;
+  will-change: transform;
+}
+
+.label {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+}
+
+/* next: the current label exits upward, the duplicate arrives from below.
+   prev: the current label exits downward, the duplicate arrives from above.
+   Both hold their end state until the next press remounts the roll. */
+.rollNext {
+  animation: rollUp 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rollPrev {
+  animation: rollDown 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rollUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes rollDown {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Two identical keyframe sets. Alternating between them on each press is what
+   restarts the squash without remounting the button and stealing focus from a
+   keyboard user mid-press. Compress, slight overshoot, settle. */
+.pressA {
+  animation: pressA 340ms ease-out both;
+}
+
+.pressB {
+  animation: pressB 340ms ease-out both;
+}
+
+@keyframes pressA {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 0.86);
+  }
+  58% {
+    transform: scale(1.02, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes pressB {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 0.86);
+  }
+  58% {
+    transform: scale(1.02, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* Mobile: one primary image. No mobile reference material exists (both
+   recordings and all screenshots are desktop), so this follows the written
+   spec in MASTER_SPEC Section 13. The flanking slots fade to nothing in
+   render(), which also removes them from the tab order. */
+@media (max-width: 767px) {
+  .section {
+    --gallery-box-w: min(80vw, 320px);
+    --gallery-box-h: min(70vw, 380px);
+  }
+
+  .viewport {
+    height: clamp(300px, 52vh, 420px);
+  }
+}
+
+/* Reduced motion: the decorative squash and roll are dropped entirely. The
+   label rests in its normal position, the button keeps its hover/focus
+   treatment and its visible focus ring, and activation still moves the
+   gallery — the functional feedback is unaffected. */
+@media (prefers-reduced-motion: reduce) {
+  .pressA,
+  .pressB,
+  .rollNext,
+  .rollPrev {
+    animation: none;
+  }
+}

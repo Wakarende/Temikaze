@@ -4,9 +4,9 @@ Last updated: 2026-08-25
 
 Current state
 
-Implementation status: Phase 6 — Music & Mixes — is the most recent phase that is both complete and still part of the site (accepted 2026-08-21, committed and pushed as 3887173). Phase 7 — Practice — was built on 2026-08-25 (commit 8bbcf93) and REMOVED the same day by product decision; it is not current functionality. See "Phase 7 REMOVED" below.
+Implementation status: Phase 8 — Stage & Visuals — complete and accepted (2026-08-26), uncommitted. Phases 1-6 and 8 are current functionality. Phase 7 — Practice — was built on 2026-08-25 (commit 8bbcf93) and REMOVED the same day by product decision (commit ce822e6); it is not current functionality.
 
-Current approved phase: none in progress. Phase 8 — Stage & Visuals — is the next implementation work and has not yet been approved to begin. See Next action.
+Current approved phase: Phase 8 complete and accepted, uncommitted and ready to commit. Phase 9 — Booking / Contact — is next and has not yet been approved to begin. See Next action.
 
 Development machine: moved from macOS to Windows on 2026-08-25. See "Repository housekeeping — macOS to Windows migration" below for what that changed — notably, the WordPress installation on this machine holds no sample records (re-seeding deferred to Phase 10), and the reference .mov recordings are not present locally.
 
@@ -58,7 +58,7 @@ Phase 6 — Music & Mixes — Accepted (2026-08-21): originally marked complete 
 
 Phase 7 — Practice — Implemented 2026-08-25, REMOVED 2026-08-25 by product decision. Not current functionality; phase number retained, phases not renumbered.
 
-Phase 8 — Stage & Visuals
+Phase 8 — Stage & Visuals — Complete and accepted (2026-08-26). Settled continuous carousel with prev/next activation micro-interaction. The oversized scroll-driven entrance explored during the repair rounds was dropped by product decision and is not part of the build.
 
 Phase 9 — Booking / Contact
 
@@ -774,16 +774,284 @@ Served-HTML check via npm run dev plus curl — confirmed id="practice" is absen
 
 Next implementation work: Phase 8 — Stage & Visuals. Phase numbering is unchanged; Phase 7 stays documented as the removed Practice phase.
 
+Phase 8 log — Stage & Visuals (2026-08-26)
+
+SUPERSEDED (2026-08-26) — HISTORY ONLY. This records the first Phase 8 build, which had a bounded gallery with disabled first/last states and no continuity. It was reopened the same day. For what actually ships, see "Phase 8 accepted state" below.
+
+Status: Complete.
+
+Files created:
+
+frontend/app/components/StageVisuals.tsx — the gallery: heading-only header row, a full-bleed viewport holding one absolutely-positioned item per image, and the two prev/next pills. Client component (state, DOM measurement, pointer and key handling).
+
+frontend/app/components/StageVisuals.module.css — all gallery styling: header row and dotted rule, box geometry tokens, active/inactive treatment, the width probe, controls, mobile single-image branch, reduced-motion branch.
+
+frontend/app/components/galleryData.ts — typed array of the six approved items (id, src, alt). Kept separate so Phase 10's swap to WordPress REST data touches only this file, matching the musicData.ts precedent.
+
+frontend/public/images/gallery/ — byte-for-byte copies of the six approved source files, each verified by matching md5 against assets-source/gallery/. The originals were not modified, moved, or re-encoded.
+
+Files modified:
+
+frontend/app/page.tsx — the Visuals placeholder replaced with the StageVisuals component; PLACEHOLDER_SECTIONS reduced to Booking alone.
+
+No other file was modified. Hero, Music, Header, globals.css, page.module.css and the WordPress plugin were not touched. No dependency was added.
+
+Content: the six approved images in the approved order (performance-01, event-02, booth-01, event-01, performance-02, cover-let-go) with the approved alt text verbatim. temikaze-cover-01.jpg and temikaze-event-03.webp were excluded per the locked decisions and are absent from frontend/public entirely — verified by directory listing and by grepping the served HTML. No captions are rendered. No poster text (dates, times, venue, billing) is transcribed anywhere, and no legal name appears in any file.
+
+Reference evidence: references/screenshots/visual-active-gallery.png, plus still frames extracted from references/LandingPage-Desktop.mov with VLC's scene filter (the VISUAL section, roughly t=59-77s, including one genuine mid-transition frame at ~t=71.6s). ffmpeg is not installed on this machine. This was frame extraction and inspection, not native video playback.
+
+Geometry derived from the reference rather than assumed:
+
+Active box measures ~798x838 device px in the reference and each flanking box ~418x420 — the flanking items sit at 0.50-0.52 of the active box, not the 0.75 that MASTER_SPEC Section 13 carries as an "inactive target". The measured 0.50 is used, per the locked instruction that reference evidence supersedes approximate legacy values.
+
+Gap between adjacent boxes measures ~29px against a 798px active box, i.e. ~4% of the active box width. Implemented as GAP_RATIO so it scales with the viewport instead of being pinned to one breakpoint.
+
+The reference fits each work inside a shared box preserving its natural aspect ratio — object-fit: contain, not a uniform crop. Confirmed two ways: in one frame all four flanking items share height 292px with widths 230-261px (all portrait, height-limited), while in the screenshot a 1.7:1 landscape item renders 290x170 (width-limited) beside a 0.78 portrait at 233x297 (height-limited). Same box, different limiting edge. This is why the supplied set's mix of 3:4 and 1:1 needs no cropping at all.
+
+All items share one vertical centre axis, maintained through transitions — verified in the reference (centres within 2px of each other mid-transition) and reproduced by anchoring every item at top: 50% with a -50% Y translate.
+
+Implementation notes worth keeping:
+
+Every item box has the same layout size; the active/flanking size difference is a transform scale, and horizontal position is a transform translate. Nothing animates layout, so the whole interaction runs on transform, opacity and filter only.
+
+Because layout width is uniform but visual width is not, the spacing maths works from visual half-widths: centre-to-centre from active to its neighbour is boxWidth/2 + gap + (boxWidth * 0.5)/2, and between two flanking items it is (boxWidth * 0.5) + gap. Measured at 1424px viewport: active centred at x=712, neighbours at +/-315, then 215 steps outward — 315/399 = 0.79 box-widths, against 638/798 = 0.80 in the reference.
+
+Navigation is bounded, not wrapping: the reference never establishes wrapping and inventing it was not warranted. prev is disabled at the first item and next at the last, both as real disabled buttons.
+
+Flanking images are clickable to bring them into focus (the reference shows a pointer cursor over them). Every item is a button at all times rather than switching element type on state change, which would remount the node and break the transition mid-flight. The active item's button carries tabIndex -1 and aria-current so it is not a redundant tab stop.
+
+Arrow keys are bound to the gallery region element, not to window or document, so they only fire while focus is inside the gallery.
+
+touch-action: pan-y on the viewport leaves vertical page scrolling to the browser; the pointer handlers only act when horizontal travel exceeds 45px and dominates vertical travel.
+
+Bug found and fixed during verification: the box width was originally measured off the first item, via getBoundingClientRect. That is wrong twice over — it reads the scaled visual width, so the measurement would have halved the moment the user navigated away from item 0, and at first paint it read ~50px before the component's CSS had settled, which put every item within 40px of centre instead of 315px. Replaced with a dedicated zero-height, never-transformed width probe carrying the same box width. Only found because the interaction was driven and measured rather than eyeballed.
+
+Tests/checks run:
+
+npm run lint — passed clean (run on the first implementation and again on the final code after all instrumentation was removed).
+
+npx tsc --noEmit — exit 0, at both points.
+
+npm run build — passed clean, three times across the phase; only the expected routes (/, /_not-found) generated.
+
+Interaction driven programmatically against a production build (npm run start) with a temporary injected harness that clicked controls, dispatched real KeyboardEvent and PointerEvent objects, then reported live getBoundingClientRect and getComputedStyle for every item. Harness fully removed afterwards; verified by grep.
+
+Results, all at 1424px unless stated: initial state — item 0 active and centred at x=712, prev disabled, next enabled, flanking items at 0.5 scale / 0.4 opacity / grayscale(0.8), all six sharing one vertical centre. next once — item 1 active and centred, prev now enabled. next five times — item 5 active, next disabled, confirming bounded navigation with no wrap. ArrowRight twice with focus inside the gallery — item 2 active. ArrowRight, ArrowRight, ArrowLeft — item 1 active, confirming backward keyboard navigation. ArrowRight with focus on the header wordmark — item 0 unchanged, confirming arrow keys are not hijacked from outside the gallery. Click on flanking item 4 — item 4 becomes active. At 500px: swipe left — item 1 active; swipe left then right — back to item 0; a mostly-vertical drag (dx 15, dy 300) — unchanged, confirming vertical gestures are not stolen from page scrolling.
+
+Horizontal overflow: document.scrollWidth equals window.innerWidth in every state tested at 1424px and 500px, including with flanking items positioned as far out as x=1194 on a 500px viewport — the viewport's overflow: hidden contains them.
+
+Mobile: at 500px and again at a genuine 375px viewport (obtained by loading the page in a 375px iframe inside a wider headless window, since Chrome headless on this machine floors window width at 500px), only the active image is visible; the flanking items are visibility: hidden, which also removes them from the tab order and the accessibility tree. Both pills remain visible and reachable, with prev correctly showing its disabled state at index 0.
+
+Alt text: all six approved strings verified present and character-exact in the served HTML.
+
+Reduced motion: the transition is disabled under prefers-reduced-motion; navigation still works, since state changes are not animation-dependent. The desktop screenshots were captured with Chrome's --force-prefers-reduced-motion flag and the gallery renders correctly.
+
+What could not be verified: the transition in motion. Chrome headless advances timers under --virtual-time-budget but does not advance CSS transitions with them, so every geometry reading had to be taken with transitions disabled. This was itself discovered the hard way — the first measurement run reported values roughly 8% into a 0.5s transition and briefly looked like a positioning bug. Start and end states are directly verified and the transition properties are declared on transform, opacity and filter at 0.5s; the motion between them rests on that, not on observation. Consistent with the sandbox limitation documented in every prior phase of this project.
+
+Visual comparison against references/screenshots/visual-active-gallery.png:
+
+Matching: display heading hard-left in Barlow Condensed 900 uppercase; full-bleed dotted rule beneath the header row; one large full-colour active image centred; smaller desaturated faded flanking images either side; multiple neighbours visible with items bleeding off the viewport edges; shared vertical centre axis; natural aspect ratios preserved with no crop; two separate adjacent solid-black pills centred below; monochrome interaction system with no colour accents.
+
+Remaining differences, honestly stated:
+
+1. The flanking images read paler than the reference's do. The numeric treatment is the same (0.4 opacity, grayscale 0.8, measured off the reference); the difference is source tonality — three of our six are posters with near-white grounds, whereas the reference's works are mostly mid-tone or dark paintings. Nothing in the implementation causes it.
+
+2. The header row is emptier on the right than the reference's, which carries a serif descriptor and a "view all" link. Both omitted by instruction: no descriptor copy is approved and there is no archive to link to.
+
+3. More vertical space above the heading than the reference has, because our sections do not use the reference's sticky-header swap that butts consecutive sections together. Uses the locked --section-spacing token.
+
+4. The reference's active box is slightly taller than wide (~798x838, 0.95); ours is viewport-height-driven via 48vh, so its proportion varies — roughly 1.03 at a 900px-tall window and closer to the reference at taller windows. The 48vh figure comes from the reference's active box occupying ~53% of viewport height.
+
+5. Transition duration is 0.5s with the locked cubic-bezier(0.25, 1, 0.5, 1) easing. This is spec-derived, not measured: the frame capture was only ~10fps, enough to confirm a transition is in flight at ~0.3s before settle but not to time it precisely.
+
+6. One reference micro-interaction is not reproduced: a single frame shows the "next" pill label doubled and vertically offset, which reads as a label roll on click. It rests on one frame, was reported as unconfirmed at preflight, and was not invented into the implementation.
+
+7. Barlow Condensed 900's letterforms remain rounder and more open than Druk's. Unchanged, accepted since Phase 2.
+
+Open contradiction left for a decision (not changed this phase): MASTER_SPEC Section 13 still lists the inactive target as scale 0.75, while the implementation uses the measured 0.50. The locked instruction for this phase was explicit that reference evidence supersedes approximate legacy values, so the code is correct, but the spec text was not amended because amending MASTER_SPEC was outside this phase's stated file scope. It should be corrected so a later reader does not "fix" 0.50 back to 0.75. See the matching DECISIONS.md entry.
+
+Acceptance criteria (MASTER_SPEC Section 13): active/inactive states visually clear — pass. Keyboard controls work — pass, verified in both directions and verified not to hijack focus elsewhere. Touch interaction works on mobile — pass, swipe verified in both directions with vertical gestures correctly ignored. No horizontal page overflow — pass, verified numerically at two widths across multiple states. Images have meaningful alt text — pass, all six exact. Gallery uses the reference monochrome interaction system — pass, no colour accents anywhere.
+
+Phase 8 repair — scroll-driven VISUAL entrance and continuous gallery (2026-08-26)
+
+SUPERSEDED (2026-08-26) — HISTORY ONLY. The scroll-driven entrance described below was dropped by product decision before it was ever manually verified, and no part of it is in the build: StageVisuals has no ScrollTrigger, no pinning and no scrubbing. The reference analysis here is kept because the entrance may be revisited in a later polish pass. The continuous-gallery work described below WAS kept. For what actually ships, see "Phase 8 accepted state" below.
+
+Status: implemented, partially verified. The scroll choreography itself is NOT verified and awaits manual browser testing. See "What is not verified" below.
+
+Why this was reopened: the first Phase 8 implementation reproduced only the settled gallery. Manual review plus newly supplied entrance screenshots established two things it got wrong — the VISUAL section opens with an oversized, effectively full-bleed introductory image that resolves into the gallery under vertical scroll control, and the settled gallery is continuous rather than bounded.
+
+Reference evidence used this round: references/screenshots/visual-active-gallery.png; three user screenshots of the entrance sequence (found at C:\Users\joyki\Pictures\Screenshots, dated 2026-08-26 19:07-19:08 — they were never copied into references/, and should be, since they are now primary evidence); and frames extracted from references/LandingPage-Desktop.mov across the entrance, roughly t=59.2-61.8s, with VLC's scene filter. This was frame extraction and inspection, not native video playback.
+
+What the reference actually shows:
+
+The VISUAL header row pins at the top of the viewport, with dotted rules above and below it, and stays there while the image resolves. The previous implementation had only a bottom rule.
+
+At the start of the sequence the active image spans the full viewport width and is top-aligned directly under the pinned header, overflowing the bottom of the stage. It reads as a full-bleed feature image, not as a gallery.
+
+The flanking items are present at their muted treatment throughout. They do not fade in from nothing — they are pushed outside the viewport by the oversized active image and slide inward as it shrinks. Confirmed in the extracted frames, where they sit at the extreme left and right edges while the active image is still very large.
+
+At the settled state the active item has items on both sides with partials bleeding off both edges. The initial active item is not at a visible beginning.
+
+What changed:
+
+frontend/app/components/StageVisuals.tsx — rewritten. Adds a scoped GSAP ScrollTrigger, replaces bounded navigation with a continuous circular gallery, and moves all positioning into one imperative render pass.
+
+frontend/app/components/StageVisuals.module.css — rewritten to match: pinned stage, dotted rules above and below the header row, taller full-bleed viewport, no CSS transitions on items.
+
+frontend/app/components/galleryData.ts — unchanged. The six approved assets and their approved alt text are untouched.
+
+frontend/app/page.tsx — unchanged from the previous phase.
+
+No other file was modified. Hero, Music, Header, globals.css, page.module.css and the WordPress plugin were not touched. No dependency was added; GSAP was already present from Phase 6.
+
+Architecture notes worth keeping:
+
+One render(position, progress) function owns the entire composition. The ScrollTrigger scrub writes progress; the navigation tween writes position; both call the same function. Neither owns the layout on its own, so there is no second source of truth to drift.
+
+progress 0 is the oversized introductory state and progress 1 is the settled gallery. The active box is scaled by viewportWidth/boxWidth at progress 0, so the oversized state is the same box scaled up rather than a second set of dimensions. Verified numerically: at progress 0 the active box measures exactly 1424px on a 1424px viewport.
+
+Flanking offsets are derived from the current active width, not from the settled width. That is what reproduces the reference behaviour of neighbours being pushed off-screen by the oversized image and sliding in as it shrinks, rather than fading in. Verified numerically: at progress 0 the immediate neighbours sit at cx=-116 and cx=1540 on a 1424px viewport, i.e. off-screen.
+
+At progress 0 the oversized image is top-aligned under the header by a lerped Y shift equal to half its vertical overflow, matching the reference. Verified numerically: the active sits 440px below the shared axis at progress 0 and on the axis at progress 1.
+
+The gallery renders the six items three times (18 slots) and places each slot by its signed circular distance from the active, wrapped into [-9, +9). Elements crossing that wrap boundary jump, but the boundary is nine slots out — far outside the viewport — so it is never seen. This is why there are no CSS transitions on the items: a transition would animate a wrapping slot straight across the viewport. Position, scale, opacity, grayscale and visibility are all written imperatively instead.
+
+Only the middle repeat is exposed to assistive technology. The other two copies carry aria-hidden and tabIndex -1 with empty alt, so the six images are announced once rather than three times.
+
+prev and next no longer have disabled states. Navigation loops in both directions. Clicking a flanking image moves by its shortest circular distance so a click never sends the row the long way round.
+
+gsap.matchMedia gates the work: the scrub is created only at (min-width: 1024px) without prefers-reduced-motion. Below that, or under reduced motion, progress is pinned at 1 and the settled gallery is presented directly with all navigation intact. A separate matchMedia condition tracks the mobile breakpoint so render() and the stylesheet agree on which composition is active. Cleanup kills the trigger and reverts the matchMedia instance on unmount.
+
+Music's ScrollTrigger was not touched. This trigger is created inside its own matchMedia context and pins its own stage element.
+
+Tests/checks run:
+
+npm run lint — passed clean, on the rewrite and again on the final code after all instrumentation was removed.
+
+npx tsc --noEmit — exit 0, at both points.
+
+npm run build — passed clean; only the expected routes generated.
+
+Interaction driven programmatically against a production build with a temporary injected harness that clicked controls, dispatched real KeyboardEvent and PointerEvent objects, and reported live geometry and aria state per slot. Harness fully removed afterwards, verified by grep.
+
+Verified — settled state and continuity (desktop 1424px, reduced motion so the scrub is skipped and the settled state is measurable):
+
+The initial active item has items on BOTH sides. Seven slots on screen, ordered event-01, performance-02, cover-let-go, [performance-01 ACTIVE], event-02, booth-01, event-01, with the outermost two partially cropped by the viewport edges. This is the requested ... 5 6 [1] 2 3 ... arrangement.
+
+Active centred at cx=712 on a 1424px viewport at full width 399 and opacity 1; flanking at 199 wide and opacity 0.4; all seven sharing one vertical centre axis; neighbour spacing 315 then 215, matching the reference proportions.
+
+Verified — looping:
+
+prev from the first item reaches cover-let-go, the sixth item. next six times returns to performance-01. Twelve nexts and twelve prevs both land back on performance-01 with the active still centred at exactly cx=712 and width 399 — no drift across two full loops in either direction. No disabled state exists at any point. Arrow keys loop the same way; clicking a flanking image activates it.
+
+Verified — controls still work: prev, next, ArrowLeft, ArrowRight, flanking-image click, and mobile swipe in both directions. ArrowRight with focus on the header wordmark leaves the gallery unchanged, so arrow keys are still not hijacked from outside the gallery.
+
+Verified — mobile (500px, and the geometry cross-checked): one primary image, no flanking composition, swipe navigation loops, a dominantly vertical drag is ignored so page scrolling is not stolen.
+
+Verified — no horizontal page overflow: document.scrollWidth equals window.innerWidth at 1424px and 500px, in the settled state and at progress 0, including with flanking slots positioned outside the viewport.
+
+Verified — state A geometry, numerically: at scroll progress 0 the active box is scaled to exactly the viewport width and shifted 440px below the shared axis, with both neighbours pushed off-screen. This confirms render() produces the correct introductory composition, and that ScrollTrigger initialises the section at progress 0.
+
+What is NOT verified, and must be manually tested in a real browser:
+
+The scroll choreography itself. Specifically: that vertical scrolling drives A to B to C; that stopping mid-scroll freezes the composition partway; that scrolling upward reverses C to B to A smoothly; and that the pin engages and releases without jumping or fighting Music's pin.
+
+None of that can be exercised here. Chrome headless advances timers under --virtual-time-budget but does not advance CSS transitions or produce genuine scroll-driven ScrollTrigger updates, which is the same sandbox limitation recorded in every prior phase of this project — and it is exactly the limitation that caused Phase 6 to be marked complete and then reopened after manual testing found the pinned interaction broken. The static endpoints are verified numerically; the motion between them is not, and is not claimed to be.
+
+Also not verified: whether the pin distance (1.4 viewport heights, with the A-to-C interpolation mapped to the first 70% and the remainder a settled dwell) feels right, and whether the settled dwell is long enough to use the controls before the section releases. Both are tuning values that only manual testing can judge.
+
+Known cosmetic issue carried forward, not introduced here: loading /#visuals directly at desktop can land above the section, because Music's ScrollTrigger pin inserts spacer height after the browser has performed its initial hash scroll. Rooted in Music, out of scope, recorded in the Phase 7 log.
+
+Reference evidence housekeeping: the three entrance screenshots are currently only in the user's Pictures\Screenshots folder. They are now primary evidence for this section's behaviour and should be copied into references/screenshots/ so the repo remains self-describing.
+
+Phase 8 accepted state — Stage & Visuals (2026-08-26)
+
+Status: Complete and accepted. This section supersedes both the "Phase 8 log" and the "Phase 8 repair — scroll-driven VISUAL entrance and continuous gallery" entries above, which are kept as history. Where they conflict with this, this is current.
+
+How the section arrived here: built once as a bounded settled gallery; reopened when newly supplied entrance screenshots showed the reference opens with an oversized scroll-driven introductory image and that the settled gallery is continuous rather than bounded; rebuilt with that scroll choreography plus a circular carousel; then narrowed by product decision, which dropped the oversized entrance entirely before it was ever manually verified. What remains accepted is the carousel, the continuity, and the button micro-interaction.
+
+Explicitly NOT in the accepted build:
+
+No fullscreen or oversized scroll-driven entrance.
+
+No StageVisuals ScrollTrigger, no pinning, no scrubbing. The only ScrollTrigger in the project is Music's, untouched throughout.
+
+That entrance may be revisited during a later polish pass. The reference analysis behind it is preserved in the repair log above and in docs/DECISIONS.md, both marked superseded.
+
+Accepted current behaviour:
+
+The section enters normal document flow already showing the settled carousel.
+
+The initial active item (temikaze-performance-01.webp) sits visually inside a continuous gallery, with muted items on both sides and partials cropped by both viewport edges — the arrangement reads ... 5 6 [1 ACTIVE] 2 3 ... not [1 ACTIVE] 2 3 4 ...
+
+Infinite circular navigation in both directions: next runs 1-2-3-4-5-6-1, prev runs 1-6-5-4-3-2-1. No disabled endpoints, no blank edge, no visible reset jump.
+
+Transitions are one continuous carousel movement: the outgoing item slides away while scaling down and desaturating, the incoming one slides in while scaling up and regaining colour, and the surrounding items shift by one slot at the same time. All driven from a single continuous position value through one render pass, with no CSS transitions on the items — a transition would animate a recycled slot's off-screen wrap straight across the viewport.
+
+Active item at full scale, opacity 1, full colour. Inactive at approximately 0.50 scale, 0.40 opacity, 80% grayscale. Natural aspect ratios preserved with contain-style fitting; no uniform crop. Shared vertical centre axis.
+
+All five navigation methods share the same circular logic and the same tween: prev pill, next pill, clicking an inactive image, ArrowLeft/ArrowRight while the gallery has focus, and mobile swipe. Arrow keys are bound to the gallery region, not to window, so they never fire from elsewhere on the page.
+
+Mobile: one primary image, swipe navigation, same circular looping, no page-level horizontal overflow.
+
+Two separate solid-black prev and next pills, unchanged in resting appearance.
+
+Button activation micro-interaction, on genuine activation only (click, Enter, Space): a slight squash of the pill, plus a masked vertical label roll — next rolls the label upward with its replacement entering from below, prev rolls it downward with the replacement entering from above. Both 340ms, pure CSS, no new dependency. The label sits in an overflow-hidden mask exactly one line tall and can never be seen outside the pill. Arrow-key navigation does not animate the pills, because the user did not press them.
+
+No decorative hover state on the pills: identical at rest and under the pointer. The pointer cursor is retained. :focus-visible is unchanged and keeps keyboard focus visibly identifiable.
+
+No captions anywhere. The six approved gallery assets only, in the approved order, with the approved alt text.
+
+Reduced motion: both pill animations are dropped and navigation becomes immediate; every navigation method stays functional.
+
+Bug found and fixed during the button work, worth recording because it was invisible until the interaction was driven programmatically: navigation originally derived its next target from the live animated position value. Because that value is mid-flight during a tween, rapid activations compounded into fractional targets (0, then 1.5, then 2.1), so no item landed centred and the active index stopped matching any real item — which silently removed aria-current from the entire gallery. Fixed by making a separate whole-number target index the source of truth for navigation, with the animated value used only for rendering. Verified afterwards: next1 lands on item 2, next5 on item 6, next6 on item 1, prev1 on item 6, prev4 on item 3, next18 on item 1 — exactly one advance per activation in every case.
+
+Tests/checks run on the final code:
+
+npm run lint — passed clean.
+
+npx tsc --noEmit — exit 0.
+
+npm run build — passed clean; only the expected routes (/, /_not-found) generated.
+
+Verified programmatically against a production build, with a temporary harness that clicked controls and dispatched real KeyboardEvent and PointerEvent objects, then read live geometry and computed styles. Harness removed afterwards and its absence confirmed by grep.
+
+Continuity: at rest the active item is centred at x=712 on a 1424px viewport at width 399 and opacity 1, with flanking items at width 199 and opacity 0.4, nine slots placed, all sharing one vertical centre axis, neighbour spacing 315 then 215.
+
+Looping and drift: next6, next18, next24, prev18 and prev24 all return to the initial item with the active still centred at exactly x=712 and width 399. After 24 activations the entire arrangement is byte-identical to the initial state — same nine items at the same nine x positions. No drift, no ordering corruption.
+
+Navigation parity: prev/next pills, ArrowLeft/ArrowRight, and inactive-image click all resolve to the same items. ArrowRight with focus on the header wordmark leaves the gallery unchanged.
+
+Mobile at 500px: one visible image, swipe left advances, swipe right goes back and wraps 1 to 6, a dominantly vertical drag is ignored so page scrolling is not stolen.
+
+No horizontal page overflow: document.scrollWidth equals window.innerWidth at 1424px and 500px across every state tested.
+
+Button micro-interaction: the squash animation-name alternates pressA, pressB, pressA... across consecutive presses, confirming the restart mechanism; the roll binds rollUp for next and rollDown for prev; the label mask computes to overflow hidden at exactly one label height and sits within the pill bounds; the accessible name is "prev" and "next", not doubled; two label spans remain after rapid clicking, so no duplicated or stuck labels; the pill measures 38.19px tall against 38px before the mask was introduced.
+
+No hover: the shipped stylesheet contains exactly two rules for the pill — the resting state and :focus-visible. A grep for any :hover selector touching the pill returns nothing, so hover can only render the resting rule.
+
+Reduced motion: the squash and roll both compute to animation: none, while navigation still advances correctly.
+
+What was not verified here, and rests on manual browser testing: the carousel movement and the button animations in motion. Chrome headless advances timers under --virtual-time-budget but does not advance CSS animations or GSAP's rAF tween, so endpoints and mechanisms were verified but the motion between them was never observed. This is the standing sandbox limitation recorded throughout this project.
+
+Known cosmetic issue carried forward, not introduced here and out of scope: loading /#visuals directly at desktop can land above the section, because Music's ScrollTrigger pin inserts spacer height after the browser has performed its initial hash scroll. Rooted in Music.
+
+Reference evidence housekeeping, still outstanding: the three VISUAL entrance screenshots used during the repair rounds live only in the user's Pictures\Screenshots folder and were never copied into references/screenshots/. They are primary evidence for this section's reference behaviour and should be added if the entrance is revisited.
+
+Acceptance criteria (MASTER_SPEC Section 13): active/inactive states visually clear — pass. Keyboard controls work — pass, both directions, and verified not to hijack focus from elsewhere. Touch interaction works on mobile — pass, both directions with vertical gestures ignored. No horizontal page overflow — pass, verified numerically at two widths across multiple states. Images have meaningful alt text — pass, all six exact. Gallery uses the reference monochrome interaction system — pass, no colour accents anywhere.
+
 Next action
 
-Phase 7 — Practice — was implemented and then REMOVED by product decision (2026-08-25). It is not current functionality. See "Phase 7 REMOVED" above. Do not rebuild it.
+Phase 8 — Stage & Visuals — is complete and accepted (2026-08-26). See "Phase 8 accepted state" above for what actually ships. The two earlier Phase 8 entries are history and are marked superseded; in particular the oversized scroll-driven entrance was dropped by product decision and is NOT part of the build.
 
-The homepage currently contains: Hero (real), Music (real), Visuals (placeholder), Booking (placeholder).
+Ready to commit. The Phase 8 commit is: frontend/app/components/StageVisuals.tsx, StageVisuals.module.css, galleryData.ts (all new), frontend/public/images/gallery/ (six new files), frontend/app/page.tsx (modified), and the documentation updates in this file, docs/DECISIONS.md and docs/MASTER_SPEC.md. Nothing is committed or pushed yet.
 
-Artist bio: location and structure TBD, pending user direction. Do not build, relocate, placeholder, or invent it until that direction is given.
+Phase 9 — Booking / Contact — is the next implementation work and must not begin without explicit approval.
 
-Phase 8 — Stage & Visuals — is the next implementation work. It must not begin without explicit approval, per the working method in CLAUDE.md. Phase numbering is unchanged; phases were not renumbered when Practice was removed.
+A shared/sticky section-header task has been discussed as separate follow-up work and has not been started.
 
-Not blocking Phase 8: deferred Phase 6 polish (handoff timing, ruler falloff, final visual calibration), deferred asset/content work (Nia artwork, audio), the Hero to Music sticky-card overlap, and the empty WordPress installation on this machine (deferred to Phase 10).
+Deferred, none of it blocking Phase 9: the Stage & Visuals oversized entrance if it is ever revisited; Phase 6 polish (handoff timing, ruler falloff, final visual calibration); asset/content work (Nia artwork, audio); the Hero to Music sticky-card overlap; the anchor-landing behaviour recorded in the Phase 7 log; and the empty WordPress installation on this machine (deferred to Phase 10).
 
-Uncommitted as of this entry: the Practice removal (two deleted component files, frontend/app/page.tsx, frontend/app/components/Header.tsx) and the documentation updates in this file, docs/MASTER_SPEC.md and docs/DECISIONS.md. Not committed or pushed, per instruction.
+Artist bio: location and structure still TBD, pending user direction. Do not build, relocate, placeholder, or invent it.
+
+Reference evidence housekeeping: the three VISUAL entrance screenshots still live only in the user's Pictures\Screenshots folder and should be copied into references/screenshots/ if the entrance is revisited.

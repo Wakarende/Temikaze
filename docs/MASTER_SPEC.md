@@ -1025,11 +1025,13 @@ grayscale 0%
 
 Inactive target:
 
-scale 0.75
+scale 0.50
 
 opacity 0.4
 
 grayscale 80%
+
+Corrected 2026-08-26 — see docs/DECISIONS.md "Gallery inactive scale corrected to 0.50 from measured reference evidence". The previous 0.75 was an approximate pre-audit figure. Direct measurement of the reference gives an active box of ~798x838 device px against flanking boxes of ~418x420, a ratio of 0.52 on width and 0.50 on height. The implemented and accepted value is 0.50. Do not restore 0.75.
 
 No colored gallery hover accents.
 

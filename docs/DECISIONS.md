@@ -378,3 +378,131 @@ MASTER_SPEC.md Section 2 now specifies four homepage sections. Section 12 is ret
 Phase numbering is unchanged. Phase 7 remains the Practice phase, documented as implemented and then removed. Phases were not renumbered. The next implementation work is the existing Phase 8 — Stage & Visuals.
 
 The four earlier Practice-specific decisions in this file (the 2026-08-13 Practice section definition, the 2026-08-13 center-alignment rule, and the two 2026-08-25 layout decisions) are each annotated as superseded in place rather than deleted, so the history of what was decided and why remains readable.
+
+2026-08-26 — Gallery inactive scale corrected to 0.50 from measured reference evidence
+
+MASTER_SPEC.md Section 13 carries "Inactive target: scale 0.75, opacity 0.4, grayscale 80%". The 0.75 was an approximate pre-audit value.
+
+Direct measurement of the reference VISUAL section (references/screenshots/visual-active-gallery.png plus frames extracted from references/LandingPage-Desktop.mov) gives an active box of ~798x838 device px and flanking boxes of ~418x420 — a ratio of 0.52 on width and 0.50 on height.
+
+Accepted: the flanking items render at 0.50 of the active box. Opacity 0.4 and grayscale 80% are unchanged; both matched the reference.
+
+This follows the standing instruction that reference visual evidence takes precedence over approximate legacy values.
+
+Not yet actioned: the 0.75 figure in MASTER_SPEC.md Section 13 has NOT been amended, because editing MASTER_SPEC was outside the stated file scope of Phase 8. The spec text and the implementation therefore currently disagree. Section 13 should be corrected to 0.50 so a later reader does not "fix" the implementation back to the superseded value.
+
+2026-08-26 — Gallery preserves natural aspect ratios with contain fitting; no uniform crop
+
+MASTER_SPEC.md Section 13 does not specify cropping behaviour for the gallery. The reference establishes it clearly.
+
+In the reference each work is fitted inside a shared box preserving its own aspect ratio. Confirmed two ways: in one frame all four flanking items share height 292px with widths 230-261px (all portrait, so height-limited), while in the screenshot a 1.7:1 landscape item renders 290x170 (width-limited) next to a 0.78 portrait at 233x297 (height-limited). Same box, different limiting edge — that is contain behaviour, not a crop.
+
+Accepted: object-fit: contain inside a shared box, never cover, and no uniform aspect-ratio crop.
+
+This matters for real content. The approved Temikaze set mixes 3:4 photography and posters with 1:1 release artwork; contain fitting handles that mix natively, whereas a uniform crop would cut the headline or footer bar off the event posters.
+
+2026-08-26 — Gallery navigation is bounded, not wrapping
+
+The reference does not establish wrapping. The available footage shows repeated forward navigation but never enough of a cycle to demonstrate whether the gallery wraps at either end, and inventing the behaviour was not warranted.
+
+Accepted: bounded navigation. prev is disabled at the first item, next at the last, both as genuinely disabled buttons rather than inert controls.
+
+Revisit only if reference evidence for wrapping appears.
+
+Superseded (2026-08-26, same day) — the entrance screenshots supplied later that day show the settled gallery has items on both sides of the initial active item, with partials cropped by both viewport edges. There is no visible first or last item. Navigation now loops in both directions and the disabled endpoint states were removed. The reasoning above was sound on the evidence then available; the evidence changed. See "The settled gallery is continuous, with no beginning or end" at the end of this file.
+
+2026-08-26 — Two supplied gallery assets excluded
+
+temikaze-cover-01.jpg is excluded. It is not a Temikaze release: it is the credits sleeve of another artist's record, listing roughly thirty third-party names, and it displays Temikaze's legal name in legible type. Including it would breach the standing rule in docs/CONTENT_INVENTORY.md against surfacing that name without explicit approval, and it also reads as a dense text block rather than a visual work.
+
+temikaze-event-03.webp is excluded. It bills a different artist rather than Temikaze, and it is largely black, so under the flanking treatment (0.4 opacity over cream, 80% grayscale) it would reduce to a faint grey rectangle.
+
+Neither file was copied into frontend/public. The originals remain untouched in assets-source/gallery/.
+
+Related content rules applied in the same phase: no captions are rendered anywhere in the gallery, and no poster text — event dates, times, venue, or billing, all of which are legible inside the supplied artwork — is transcribed into alt text or any other rendered copy.
+
+2026-08-26 — The VISUAL section's entrance is scroll-scrubbed, not a settled gallery alone
+
+Supersedes the implicit assumption in the first Phase 8 implementation, which reproduced only the settled gallery and treated the section as static until the controls were used.
+
+The reference VISUAL section has two connected states driven by vertical scroll position: an oversized, effectively full-bleed introductory image, resolving into the settled horizontal gallery. Established from three user-supplied entrance screenshots and from frames extracted across t=59.2-61.8s of references/LandingPage-Desktop.mov.
+
+Accepted behaviour:
+
+The section header pins with dotted rules above and below it and stays in place while the image resolves. The earlier single bottom rule was wrong.
+
+At scroll progress 0 the active image is scaled to the full viewport width and top-aligned under the pinned header, overflowing the bottom of the stage.
+
+The flanking items hold their muted treatment throughout. They are pushed outside the viewport by the oversized active image and slide inward as it shrinks. They do not fade in from nothing — the extracted frames show them at the extreme viewport edges while the active image is still very large.
+
+The transformation is scrubbed, not time-based: stopping mid-scroll must hold the intermediate composition, and scrolling up must reverse it.
+
+Implemented with a scoped GSAP ScrollTrigger inside its own gsap.matchMedia context, desktop-only and skipped under reduced motion. Music's trigger is untouched.
+
+This decision records the behaviour, not its verification. The scroll choreography could not be exercised in the development sandbox and was pending manual browser testing when this entry was written.
+
+SUPERSEDED (2026-08-26, later the same day) — the oversized scroll-driven entrance was deliberately DROPPED by product decision before it was ever manually verified. Stage & Visuals now begins directly in its settled carousel state, in normal document flow, and StageVisuals has no ScrollTrigger of its own. The reference analysis recorded above remains accurate and is kept because the entrance may be revisited during a later polish pass — but none of it describes the current implementation. The one part that survived into the accepted build is the header row's dotted rules above and below. See "Stage & Visuals accepted state" at the end of this file.
+
+2026-08-26 — The settled gallery is continuous, with no beginning or end
+
+Supersedes "2026-08-26 — Gallery navigation is bounded, not wrapping" recorded earlier the same day. That entry reasoned that the reference never demonstrated wrapping, so bounded navigation with disabled endpoints was the conservative choice.
+
+The supplied entrance screenshots settle it: at the settled state the initial active item has items on both sides, with partials cropped by both viewport edges. There is no visible first item and no visible last item.
+
+Accepted: the gallery is continuous. The first approved asset remains the initial active image, but it sits inside an endless sequence — the arrangement reads ... 5 6 [1 ACTIVE] 2 3 ... rather than [1 ACTIVE] 2 3 4 ...
+
+Navigation loops in both directions. There are no disabled prev/next states.
+
+Implemented by rendering the six items three times and placing each slot by its signed circular distance from the active item, wrapped nine slots out — far outside the viewport, so no slot is ever seen jumping. This is also why the items carry no CSS transitions: a transition would animate a wrapping slot straight across the screen. All positioning is written imperatively instead, by the same render pass that the scroll scrub drives.
+
+Only the middle repeat is exposed to assistive technology; the duplicate copies carry aria-hidden, tabIndex -1 and empty alt so the six images are announced once, not three times.
+
+2026-08-26 — Stage & Visuals accepted state
+
+This entry records what Phase 8 actually ships, after the section was built, reopened twice, and narrowed by product decision. Where earlier entries in this file conflict with it, this one is current. Each of those has been annotated superseded in place rather than deleted.
+
+No scroll-driven entrance. The section enters normal document flow already showing the settled carousel. StageVisuals creates no ScrollTrigger and does no pinning or scrubbing of its own; the only ScrollTrigger in the project remains Music's, which was not touched. GSAP is still used here, but only to tween the carousel's own navigation.
+
+The gallery is continuous in both directions. The initial active item sits inside the sequence with muted items on both sides and partials cropped by both viewport edges. next runs 1-2-3-4-5-6-1 and prev runs 1-6-5-4-3-2-1. There are no disabled endpoints, no blank edge, and no visible reset.
+
+Visual treatment as measured from the reference: active at full scale, opacity 1 and full colour; inactive at approximately 0.50 scale, 0.40 opacity and 80% grayscale. Natural aspect ratios preserved with contain-style fitting, never a uniform crop. No captions. The six approved assets only.
+
+All five navigation methods share the same circular logic and the same tween: the prev and next pills, clicking an inactive image, ArrowLeft and ArrowRight while the gallery has focus, and mobile swipe. Mobile shows one primary image and loops the same way.
+
+Reduced motion keeps every navigation method functional and drops the decorative movement.
+
+2026-08-26 — Carousel navigation targets a whole-number index, not the animated position
+
+Found while verifying the button micro-interaction, not designed up front.
+
+Navigation originally derived its next target from the live animated position value. Because that value is mid-flight whenever a tween is running, rapid activations compounded into fractional targets — 0, then 1.5, then 2.1 — so no item ever landed centred and the active index stopped matching any real item, which silently removed aria-current from the whole gallery.
+
+Accepted: a separate whole-number target index is the source of truth for navigation. The animated value is for rendering only. Every activation advances exactly one item, however fast the input arrives.
+
+2026-08-26 — Prev/next pill activation micro-interaction
+
+Accepted behaviour, triggered only by genuine activation of the control — mouse click, Enter or Space, all of which a native button reports through one click handler. Arrow-key gallery navigation is handled on the gallery region and deliberately does not animate a pill the user did not press.
+
+Two effects run together, both pure CSS, no new dependency:
+
+A slight squash of the pill — compress, small overshoot, settle — over 340ms.
+
+A masked vertical label roll over 340ms. For next the label exits upward and its replacement enters from below; for prev it exits downward and the replacement enters from above. The label sits in an overflow-hidden mask exactly one line tall, so it can never be seen outside the black pill.
+
+Two different restart mechanisms, deliberately. The squash alternates between two identical keyframe sets, because changing animation-name restarts a CSS animation without a remount — and the button must not remount, or a keyboard user who pressed Enter would lose focus mid-press. The label roll instead remounts by key; it is not focusable, so remounting is free and guarantees a clean restart with no stuck or duplicated label however fast the clicks come.
+
+Both labels carry the same word and the duplicate is aria-hidden, so the button announces its label once and the roll's reset between presses is invisible.
+
+The pill's resting height was preserved when the label mask was introduced: line-height moved from 1 to 1.25 so the descender in "prev" is not clipped, with padding-block reduced to compensate. Measured 38.19px against the previous 38px.
+
+Under reduced motion both animations are dropped; the button keeps its focus treatment and activation still moves the gallery.
+
+2026-08-26 — Prev/next pills have no hover state
+
+The reference has no hover treatment on these controls.
+
+Accepted: the pills are visually identical at rest and under the pointer — same background, text, border, scale, position, opacity and label placement. No lightening, inversion, translation, scaling, underline or glow. The pointer cursor is retained.
+
+The only visual change comes from actually activating the control.
+
+:focus-visible is unchanged and still provides visible keyboard focus indication. Note that its treatment was originally authored as a shared hover-and-focus rule; with hover removed it now applies to focus alone, which is intentional and leaves the focus state visibly distinct.
