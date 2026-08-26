@@ -15,3 +15,10 @@
   text-transform: uppercase;
   color: var(--foreground);
 }
+
+/* Bounds the shared sticky content-run header. Its own children (the section
+   components) provide all the visual treatment; this wrapper exists purely to
+   scope how long SectionHeader sticks. Booking joins it in Phase 9. */
+.contentRun {
+  position: relative;
+}

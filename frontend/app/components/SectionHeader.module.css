@@ -1,0 +1,110 @@
+/* Sticky within the content run, not the page. The run's wrapper is what
+   bounds it, so the header takes over when Music arrives and releases at the
+   end of the run rather than following the reader forever. */
+.header {
+  --section-header-content-h: clamp(3.5rem, 7vw, 5.5rem);
+
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--background);
+  border-top: var(--divider);
+  border-bottom: var(--divider);
+}
+
+.inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-block: 1.5rem;
+  /* Fixed so the band does not change height when the descriptor is empty —
+     Visuals has no approved descriptor, and a sticky header that resized at
+     the section boundary would visibly jolt the content beneath it. */
+  min-height: var(--section-header-content-h);
+}
+
+/* Both sides are masks: the outgoing line rolls up and out while the incoming
+   one arrives from below, clipped by the band. Same masked-roll language as
+   the accepted prev/next pills. */
+.titleMask,
+.descriptorMask {
+  overflow: hidden;
+  height: var(--section-header-content-h);
+}
+
+.titleMask {
+  flex: 0 1 auto;
+}
+
+.descriptorMask {
+  flex: 0 1 20rem;
+}
+
+.roll {
+  display: block;
+  will-change: transform;
+}
+
+.rollUp {
+  animation: sectionRoll 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sectionRoll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  height: var(--section-header-content-h);
+  font-family: var(--font-display);
+  font-weight: var(--weight-h2);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+.descriptor {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: var(--section-header-content-h);
+  font-family: var(--font-serif);
+  font-size: var(--text-h3);
+  line-height: var(--leading-h3);
+  color: var(--foreground);
+  text-align: right;
+}
+
+/* Mobile: the same single changing header, scaled down so it does not eat the
+   viewport. The descriptor is dropped rather than wrapped, which keeps the
+   band short and avoids any chance of the two sides colliding. */
+@media (max-width: 767px) {
+  .header {
+    --section-header-content-h: clamp(2.25rem, 11vw, 3rem);
+  }
+
+  .inner {
+    padding-block: 0.75rem;
+  }
+
+  .descriptorMask {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rollUp {
+    animation: none;
+    transform: translateY(-50%);
+  }
+}

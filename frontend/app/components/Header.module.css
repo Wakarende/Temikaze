@@ -1,6 +1,10 @@
+/* Normal document flow, not sticky. This navigation belongs to the Hero-side
+   experience: it scrolls away as the reader leaves Hero, and the content run's
+   shared editorial header takes over from Music onward. Previously it was
+   position: sticky, which left it permanently stacked above the section header
+   — two headers at the top at once, which the reference never shows. */
 .header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 50;
   background: var(--background);
   border-bottom: var(--divider);

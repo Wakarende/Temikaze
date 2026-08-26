@@ -221,10 +221,15 @@ export default function Music() {
 
         wrapper.setAttribute("data-pinned", "true");
 
+        // Offset the pin against the shared content-run header, which is what
+        // is actually stuck above this section now. The global navigation no
+        // longer sticks, so --header-height is the wrong reference. The
+        // SectionHeader publishes --section-header-height from its measured
+        // box; the fallback only matters for the frame before it does.
         const headerHeight =
           parseFloat(
             getComputedStyle(document.documentElement).getPropertyValue(
-              "--header-height"
+              "--section-header-height"
             )
           ) || 0;
 
@@ -290,18 +295,18 @@ export default function Music() {
 
   return (
     <section id="music" className={styles.music}>
-      {/* pinStage wraps the header together with the record stage so GSAP
-          pins both as one composition — otherwise the header (being outside
-          the pinned element) scrolls out of view before pinning engages,
-          leaving the records floating under a blank gap. Unchanged on
-          mobile/tablet, where this branch of the effect never runs and the
-          two children keep their normal document-flow stacking. */}
-      <div className={styles.pinStage} ref={pinStageRef}>
-        <div className={`container ${styles.headerRow}`}>
-          <h2 className={styles.heading}>Music</h2>
-          <p className={styles.descriptor}>Original releases and DJ mixes</p>
-        </div>
+      {/* The visible "MUSIC" title and its descriptor now live in the shared
+          content-run header (SectionHeader), which is sticky above this
+          section — rendering them here as well produced two competing
+          headings. This heading stays for the document outline and is
+          visually hidden; the shared header is aria-hidden so the title is
+          announced once. */}
+      <h2 className="visually-hidden">Music</h2>
 
+      {/* pinStage is what GSAP pins. It no longer needs to carry the header,
+          only the record stage; the pin now starts below the shared sticky
+          header instead. */}
+      <div className={styles.pinStage} ref={pinStageRef}>
         <div className={styles.wrapper} ref={wrapperRef}>
           <div className={styles.ruler} aria-hidden="true" />
           <div className={styles.rulerTicks} ref={rulerTicksRef} aria-hidden="true" />

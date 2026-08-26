@@ -310,9 +310,11 @@ export default function StageVisuals() {
       {/* Header row carries the heading only. The reference also has a serif
           descriptor and a "view all" link; both stay omitted — no descriptor
           copy is approved and there is no archive to link to. */}
-      <div className={`container ${styles.headerRow}`}>
-        <h2 className={styles.heading}>Visuals</h2>
-      </div>
+      {/* The visible "VISUALS" title now lives in the shared content-run
+          header (SectionHeader), sticky above this section. This heading stays
+          for the document outline and is visually hidden; the shared header is
+          aria-hidden so the title is announced once. */}
+      <h2 className="visually-hidden">Visuals</h2>
 
       <div
         className={styles.viewport}

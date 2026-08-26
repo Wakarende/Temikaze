@@ -115,7 +115,11 @@ body {
    honored for hash-fragment navigation than scroll-padding-top on the
    scroll container. */
 section[id] {
-  scroll-margin-top: var(--header-height);
+  /* The content-run sections sit beneath the shared editorial header, which
+     is what is actually stuck above them; the global navigation no longer
+     sticks. SectionHeader publishes its measured height, and the old
+     --header-height remains the fallback for the frame before it does. */
+  scroll-margin-top: var(--section-header-height, var(--header-height));
 }
 
 body {
@@ -139,4 +143,19 @@ a {
   max-width: var(--content-max-width);
   margin-inline: auto;
   padding-inline: var(--gutter);
+}
+
+/* Utility: keeps a heading in the document outline and the accessibility tree
+   while the visible title is presented elsewhere. Used by Music and Stage &
+   Visuals, whose visible titles live in the shared content-run header. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
