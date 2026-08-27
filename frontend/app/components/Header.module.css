@@ -20,22 +20,17 @@
   will-change: transform;
 }
 
-/* The reference uses distinct, widely spaced dots rather than the tightly
-   packed pattern produced by border-style: dotted. Kept local to the primary
-   navbar so the shared Music/Visuals rules retain their existing treatment. */
+/* Drawn from the shared dotted-rule tokens in globals.css, so this and the
+   Music/Visuals header cannot drift into two slightly different patterns. */
 .header::after {
   content: "";
   position: absolute;
   inset-inline: 0;
   bottom: 0;
-  height: 3px;
-  background-image: radial-gradient(
-    circle at 1.5px 50%,
-    var(--foreground) 1.5px,
-    transparent 1.6px
-  );
+  height: var(--dotted-rule-height);
+  background-image: var(--dotted-rule-image);
   background-repeat: repeat-x;
-  background-size: 16px 3px;
+  background-size: var(--dotted-rule-size);
   pointer-events: none;
 }
 

@@ -87,10 +87,33 @@ export default function SectionHeader({
     // cheap enough not to need a frame gate, and it keeps the section title in
     // step with the scroll position with no extra machinery.
     const evaluate = () => {
+      const rect = el.getBoundingClientRect();
+
+      // Whether the band has left its flow position and started following the
+      // reader. Measured against the content run — the band's own parent, and
+      // so exactly where it sits when it is not stuck — rather than against
+      // its computed `top`, which is mid-animation whenever the primary
+      // navigation is sliding and would flicker the boundary rule.
+      //
+      // Written straight to the DOM rather than held in state: only CSS reads
+      // it, so a re-render on every scroll event would buy nothing.
+      const run = el.parentElement;
+      if (run) {
+        // Against the run's CONTENT box, not its border box. The run carries
+        // the Music entry gap as padding-top, and the band's flow position is
+        // below that padding — comparing against the border box would read the
+        // gap as displacement and report the band stuck from the very first
+        // paint, suppressing the Music boundary's top rule entirely.
+        const runTop =
+          run.getBoundingClientRect().top +
+          parseFloat(getComputedStyle(run).paddingTop || "0");
+        el.dataset.stuck = rect.top - runTop > 1 ? "true" : "false";
+      }
+
       // The band's own lower edge, read live rather than from its height, so
       // the boundary stays correct when the primary navigation returns above
       // it and pushes this header down (see NavReturn).
-      const line = el.getBoundingClientRect().bottom;
+      const line = rect.bottom;
 
       let next = sections[0];
       for (const section of sections) {
@@ -136,7 +159,7 @@ export default function SectionHeader({
           heading. Each section keeps its own real <h2> in the document, so the
           heading outline and anchor navigation are unaffected and the title is
           not announced twice. */}
-      <div className={`container ${styles.inner}`}>
+      <div className={`page-shell ${styles.inner}`}>
         <div className={styles.titleMask}>
           <span
             key={roll.key}

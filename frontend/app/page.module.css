@@ -21,4 +21,18 @@
    scope how long SectionHeader sticks. Booking joins it in Phase 9. */
 .contentRun {
   position: relative;
+  /* The Music entry gap: the cream breathing room between the end of the Hero
+     photograph and the top dotted rule of the Music boundary.
+
+     It lives here, on the run itself, rather than inside SectionHeader,
+     because it belongs to the page's Hero -> content-run boundary and not to
+     the header. That placement is what makes it behave correctly for free: it
+     sits above the header in normal flow, so it scrolls away and is gone once
+     the header sticks, it cannot reappear between Music and Visuals or before
+     Booking, and it never follows the header around.
+
+     It does not move where the header releases either — a sticky element is
+     bounded by its containing block's content box, and padding at the top of
+     that box does not change where its bottom is. */
+  padding-top: clamp(1.5rem, 4vw, 5rem);
 }

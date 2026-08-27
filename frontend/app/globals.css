@@ -26,6 +26,21 @@
   /* Dotted-rule divider, see MASTER_SPEC.md Section 7/8 */
   --divider: 1px dotted var(--rule);
 
+  /* The heavier dotted rule the reference actually uses: distinct, widely
+     spaced dots rather than the tight pattern border-style: dotted produces,
+     so it is painted as a repeating radial-gradient instead of a border.
+
+     Defined once here because two systems draw it — the primary navigation
+     and the shared Music/Visuals header — and they must not drift apart.
+     Both reference these three values rather than restating the gradient. */
+  --dotted-rule-height: 3px;
+  --dotted-rule-image: radial-gradient(
+    circle at 1.5px 50%,
+    var(--foreground) 1.5px,
+    transparent 1.6px
+  );
+  --dotted-rule-size: 16px 3px;
+
   /* Layout, see MASTER_SPEC.md Section 8 */
   --content-max-width: 1440px;
   --gutter: clamp(1.5rem, 4vw, 4rem);

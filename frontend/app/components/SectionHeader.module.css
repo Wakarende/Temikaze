@@ -8,12 +8,49 @@
   top: 0;
   z-index: 40;
   background: var(--background);
-  border-top: var(--divider);
-  border-bottom: var(--divider);
   /* Matches the primary navigation's slide, so the two move together rather
      than this band snapping into place while the navigation is still on its
      way. See the offset rule below for why this animates top. */
   transition: top 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The persistent rule. The band always closes with one, in every state and for
+   every section, drawn from the same globals.css tokens as the navigation. */
+.header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--dotted-rule-height);
+  background-image: var(--dotted-rule-image);
+  background-repeat: repeat-x;
+  background-size: var(--dotted-rule-size);
+  pointer-events: none;
+}
+
+/* The top rule belongs to Music's physical entry boundary, not to the header.
+   It shows only while the band is still sitting in flow at the start of the
+   content run — the moment the reader crosses out of Hero into Music, and
+   again on the way back up through it — and disappears once the band has stuck
+   and started following the reader. Visuals is therefore never given one:
+   Visuals can only be active while the band is stuck, and the explicit
+   data-active-section guard says so rather than relying on that.
+
+   Deliberately a pseudo-element rather than a border-top, so appearing and
+   disappearing costs no height and cannot jolt the content beneath it.
+
+   The default with neither attribute present — first paint, before the effect
+   below has run — is Music-and-not-stuck, which is exactly the entry state. */
+.header[data-active-section="music"]:not([data-stuck="true"])::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--dotted-rule-height);
+  background-image: var(--dotted-rule-image);
+  background-repeat: repeat-x;
+  background-size: var(--dotted-rule-size);
+  pointer-events: none;
 }
 
 /* Whenever the primary navigation is showing it takes the topmost position, so
@@ -38,7 +75,11 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 2rem;
-  padding-block: 1.5rem;
+  /* Much tighter than before. The reference runs its rules close to the title,
+     and the old 1.5rem top and bottom left the band roughly a third empty
+     cream. The slot height below still does the real work of setting the
+     band's size; this is only the breathing room around it. */
+  padding-block: clamp(0.4rem, 0.7vw, 0.75rem);
   /* Fixed so the band does not change height when the descriptor is empty —
      Visuals has no approved descriptor, and a sticky header that resized at
      the section boundary would visibly jolt the content beneath it. */
@@ -115,7 +156,7 @@
   }
 
   .inner {
-    padding-block: 0.75rem;
+    padding-block: 0.5rem;
   }
 
   .descriptorMask {
