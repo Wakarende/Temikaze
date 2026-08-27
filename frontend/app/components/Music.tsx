@@ -9,6 +9,13 @@ import styles from "./Music.module.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Mobile browsers fire resize when the address bar collapses or expands during
+// scrolling. Left alone, that triggers a ScrollTrigger refresh mid-gesture,
+// which re-measures the pin and makes the record track jump. This tells
+// ScrollTrigger to ignore vertical-only resizes on touch devices; genuine
+// orientation changes still refresh normally.
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 // Manual browser testing (2026-08-21) showed a 1:1 vertical-scroll-to-
 // horizontal-travel mapping consumes the entire track in a single ordinary
 // scroll gesture (trackpad/wheel), so the section flew straight past into
@@ -18,6 +25,16 @@ gsap.registerPlugin(ScrollTrigger);
 // (see getTotalDistance below), not a hard-coded pixel count, so it still
 // scales correctly if the track's content changes.
 const SCROLL_PACE_MULTIPLIER = 1.6;
+
+// Touch layouts need a longer vertical run than desktop wheel input for the
+// same horizontal travel. This is the tablet baseline; phones receive their
+// own feedback-tuned value below. Both only pace measured geometry and never
+// replace it.
+const SCROLL_PACE_MULTIPLIER_TOUCH = 2.2;
+// Phone feedback showed that a one-viewport card pitch still crossed the focal
+// area too quickly during an ordinary finger scroll. Keep tablet pacing as-is
+// and give the narrower phone composition a longer, more readable dwell.
+const SCROLL_PACE_MULTIPLIER_MOBILE = 3.2;
 
 // Ruler/tick geometry, measured against references/LandingPage-Desktop.mov
 // (the AUDIO section, ~t=32–46s): ticks sit ~14px apart; the emphasised
@@ -46,10 +63,13 @@ const TICK_PEAK_OPACITY = 1;
 // and only transitions through a comparatively narrow band around the
 // crossover — the point exactly between two adjacent card centers, where
 // "closest" flips from one card to the next. See updateCardEmphasis below.
+// Emphasis is carried entirely by opacity. There is deliberately no scale
+// pair here any more: a muted card used to sit at 0.7 and grow to 1 as it
+// became active, which read as the record popping toward the reader. Every
+// record now holds the size the active one had, and the handoff is purely a
+// change in emphasis.
 const CARD_MUTED_OPACITY = 0.35;
 const CARD_ACTIVE_OPACITY = 1;
-const CARD_MUTED_SCALE = 0.7;
-const CARD_ACTIVE_SCALE = 1;
 // Width of the crossover transition zone, as a fraction of the full
 // spacing between two adjacent card centers. Small = a quick handoff with
 // a wide stable-muted plateau on either side, matching "outside the
@@ -70,42 +90,83 @@ export default function Music() {
     const rulerTicks = rulerTicksRef.current;
     if (!pinStage || !wrapper || !track || !rulerTicks) return;
 
+    const cards = Array.from(
+      track.querySelectorAll<HTMLElement>("[data-card]")
+    );
+    const discs = cards
+      .map((card) => card.querySelector<HTMLElement>(`.${styles.disc}`))
+      .filter((disc): disc is HTMLElement => disc !== null);
+    if (discs.length !== cards.length) return;
+
+    // Desktop writes transforms/opacity directly for every scrub frame. Those
+    // values must not survive a breakpoint or reduced-motion change and leak
+    // into the normal vertical fallback.
+    const resetToDocumentFlow = () => {
+      wrapper.removeAttribute("data-pinned");
+      track.style.removeProperty("transform");
+      cards.forEach((card, index) => {
+        card.style.removeProperty("opacity");
+        card.setAttribute("data-active", index === 0 ? "true" : "false");
+      });
+      rulerTicks.replaceChildren();
+    };
+
     const mm = gsap.matchMedia();
 
     mm.add(
       {
         isDesktop: "(min-width: 1024px)",
+        // Never read. It exists so the context ACTIVATES below 1024px.
+        // gsap.matchMedia only runs the callback while at least one declared
+        // condition matches: with just isDesktop and reducedMotion, a phone
+        // matched neither, so this callback never ran at all and Music silently
+        // had no interaction — the vertical list was only the CSS default
+        // showing through. The complementary query is what makes the mobile
+        // branch reachable.
+        isTouch: "(max-width: 1023px)",
+        isMobile: "(max-width: 767px)",
         reducedMotion: "(prefers-reduced-motion: reduce)",
       },
       (context) => {
-        const { isDesktop, reducedMotion } = context.conditions as {
+        const { isDesktop, isMobile, reducedMotion } = context.conditions as {
           isDesktop: boolean;
+          isMobile: boolean;
           reducedMotion: boolean;
         };
 
-        // Below desktop, or with reduced motion requested, the track stays
-        // a plain native horizontal scroller (see Music.module.css) — no
-        // GSAP involvement at all.
-        if (!isDesktop || reducedMotion) {
+        // Reduced motion is the only mode that opts out of the interaction
+        // entirely: items stay in normal vertical document flow with no pin and
+        // no GSAP involvement.
+        //
+        // Every other width — phone, tablet, desktop — builds the SAME system:
+        // vertical scroll pins the stage and drives the track horizontally.
+        // isDesktop no longer decides whether the interaction exists, only how
+        // it is paced; the geometry differences are entirely in CSS, and are
+        // picked up automatically because every distance below is measured from
+        // the live layout rather than assumed.
+        if (reducedMotion) {
+          resetToDocumentFlow();
           return;
         }
 
-        const cards = Array.from(
-          track.querySelectorAll<HTMLElement>("[data-card]")
-        );
+        // Crossing 768px or 1024px changes the responsive card geometry and/or
+        // emphasis lifecycle. Keeping those states as matchMedia conditions
+        // makes GSAP rebuild from the live layout rather than retain stale
+        // measurements from the previous mode.
+        const pace = isDesktop
+          ? SCROLL_PACE_MULTIPLIER
+          : isMobile
+            ? SCROLL_PACE_MULTIPLIER_MOBILE
+            : SCROLL_PACE_MULTIPLIER_TOUCH;
 
-        // Each card's emphasis (opacity/scale) is driven continuously by its
-        // distance from the current focal position, not by a discrete
-        // index — reproduces the reference's gradual approach/recede rather
-        // than an instant jump. Card centers are read once here (and again
-        // on refresh) via offsetLeft/offsetWidth, which reflect each card's
-        // stable, untransformed position in the track's own layout — unlike
-        // getBoundingClientRect, they are NOT affected by the transform the
-        // emphasis itself applies, so there is no feedback loop between
-        // "how a card currently looks" and "where the math thinks it is".
+        // Tablet/desktop emphasis is driven continuously by distance from the
+        // focal position; phones use the viewport-edge lifecycle below. Both
+        // read stable card centres from offsetLeft/offsetWidth, which are not
+        // affected by the translated track's rendered position.
         let cardCenters: number[] = [];
         let cardSpacing = 1;
         let activeIndex = 0;
+        let scrollDirection: 1 | -1 = 1;
         const buildCardGeometry = () => {
           cardCenters = cards.map(
             (card) => card.offsetLeft + card.offsetWidth / 2
@@ -122,6 +183,45 @@ export default function Music() {
 
         const updateCardEmphasis = () => {
           const currentX = (gsap.getProperty(track, "x") as number) || 0;
+
+          /* Phones use a viewport lifecycle rather than the wider-screen
+             centre-distance crossfade. This is calculated directly from the
+             current position on every frame, so a fast inertial scroll cannot
+             skip a narrow "fully visible" observation and leave later cards
+             muted. The measured cardSpacing keeps adjacent state intervals
+             contiguous even if 100vw and clientWidth differ by a pixel. */
+          if (isMobile) {
+            const edgeTolerance = 1;
+            activeIndex = cards.findIndex((card, index) => {
+              const halfWidth = card.offsetWidth / 2;
+              const screenCenter = cardCenters[index] + currentX;
+              const leftEdge = screenCenter - halfWidth;
+              const rightEdge = screenCenter + halfWidth;
+
+              if (scrollDirection > 0) {
+                return (
+                  rightEdge >
+                    wrapper.clientWidth - cardSpacing - edgeTolerance &&
+                  rightEdge <= wrapper.clientWidth + edgeTolerance
+                );
+              }
+
+              return (
+                leftEdge >= -edgeTolerance &&
+                leftEdge < cardSpacing + edgeTolerance
+              );
+            });
+
+            cards.forEach((card, index) => {
+              const isActive = index === activeIndex;
+              card.style.opacity = `${
+                isActive ? CARD_ACTIVE_OPACITY : CARD_MUTED_OPACITY
+              }`;
+              card.setAttribute("data-active", isActive ? "true" : "false");
+            });
+            return;
+          }
+
           // The track-local coordinate currently sitting at the wrapper's
           // visual center — screen_x = track_local + x, so solving for the
           // track_local that lands on screen_x = clientWidth / 2.
@@ -165,9 +265,6 @@ export default function Music() {
             card.style.opacity = `${
               CARD_MUTED_OPACITY + eased * (CARD_ACTIVE_OPACITY - CARD_MUTED_OPACITY)
             }`;
-            card.style.transform = `scale(${
-              CARD_MUTED_SCALE + eased * (CARD_ACTIVE_SCALE - CARD_MUTED_SCALE)
-            })`;
           });
 
           // Kept as a semantic/discrete marker (drives the vinyl-rotation
@@ -216,53 +313,122 @@ export default function Music() {
           }
         };
 
+        // Switch into the desktop horizontal layout before measuring it so
+        // every center and distance belongs to the mode GSAP will animate.
+        wrapper.setAttribute("data-pinned", "true");
         buildTicks();
         buildCardGeometry();
-
-        wrapper.setAttribute("data-pinned", "true");
 
         // Offset the pin against the shared content-run header, which is what
         // is actually stuck above this section now. The global navigation no
         // longer sticks, so --header-height is the wrong reference. The
         // SectionHeader publishes --section-header-height from its measured
-        // box; the fallback only matters for the frame before it does.
-        const headerHeight =
+        // box; the fallback only matters for the frame before it does. Keep
+        // this function-based so every ScrollTrigger refresh rereads the
+        // current responsive measurement instead of retaining a stale value.
+        const getSectionHeaderHeight = () =>
           parseFloat(
             getComputedStyle(document.documentElement).getPropertyValue(
               "--section-header-height"
             )
           ) || 0;
 
-        // Centering the first/last card alone isn't the reference's full
-        // journey — Nia needs room to travel in from the entering edge, and
-        // Mum's Garage Radio needs room to travel out past the exiting edge,
-        // before the section releases. That extra room ("edge roll") is
-        // derived from the wrapper's own viewport width, not a fixed guess:
-        // half a viewport-width of travel puts a card's center exactly at
-        // the wrapper's edge at the start/end of the journey — a card fully
-        // outside the wrapper the instant before/after that. Total distance
-        // (edge roll + centre-to-centre + edge roll) is what the vertical
-        // scroll range is paced against below, same as before.
-        const getEdgeRoll = () => wrapper.clientWidth / 2;
-        const getCenterDistance = () => track.scrollWidth - wrapper.clientWidth;
+        // The horizontal motion has one reversible range, but the pin occupies
+        // only its established middle. Before the pin, the first vinyl enters
+        // while Music approaches. After the pin, the last vinyl finishes
+        // leaving while Visuals rises into view. Using one scrubbed tween for
+        // all three phases makes reverse scroll mirror the same geometry.
+        const ENTRY_POSITION_AT_PIN_FRACTION = 0.286;
+        const EXIT_OUTSIDE_FRACTION_AT_RELEASE = 0.6;
+
+        // getBoundingClientRect measures the rendered vinyl rather than its
+        // much wider card slot. With scaling removed, this width is stable even
+        // while the parent track is translated.
+        const getDiscWidth = (disc: HTMLElement) =>
+          disc.getBoundingClientRect().width;
+
+        // At the motion boundary the vinyl's nearest edge is exactly at the
+        // viewport edge. At the pin boundary it retains the accepted 0.286w
+        // offset, so the section becomes established while it is still moving.
+        const getEntryStartRoll = () =>
+          wrapper.clientWidth / 2 + getDiscWidth(discs[0]) / 2;
+        const getEntryRollAtPin = () =>
+          wrapper.clientWidth * ENTRY_POSITION_AT_PIN_FRACTION;
+
+        // A disc is 60% outside the left edge when its centre is 10% of its
+        // width beyond that edge. The pin releases there; the remaining 40%
+        // continues through the same tween until the disc is fully outside.
+        const getExitRollAtRelease = () =>
+          wrapper.clientWidth / 2 +
+          getDiscWidth(discs[discs.length - 1]) *
+            (EXIT_OUTSIDE_FRACTION_AT_RELEASE - 0.5);
+        const getExitEndRoll = () =>
+          wrapper.clientWidth / 2 +
+          getDiscWidth(discs[discs.length - 1]) / 2;
+
+        // --- MAIN SEQUENCE -------------------------------------------------
+        // The centre-to-centre span: how far the track travels between the
+        // first record sitting centred and the last one sitting centred.
+        //
+        // Measured from the cards themselves. It used to be
+        // track.scrollWidth - wrapper.clientWidth, which is NOT that distance:
+        // scrollWidth omits the track's trailing padding, so at 1600 it read
+        // 1430 against a true span of 3 x 680 = 2040. The sequence was 610px
+        // short of ever bringing the last record to centre, which is why no
+        // amount of exit roll could push it off screen — the roll was being
+        // spent making up the shortfall instead of clearing the record.
+        //
+        // Record-to-record pitch is untouched by this: the span is literally
+        // the sum of the accepted pitches, just measured correctly.
+        const getCenterDistance = () =>
+          cards.length > 1
+            ? cards[cards.length - 1].offsetLeft - cards[0].offsetLeft
+            : 0;
+
+        // Convert each outer overlap from measured horizontal travel to the
+        // existing vertical pace. The pin range is only the travel between the
+        // accepted entry position and the 60%-outside exit position; the full
+        // tween range includes the offscreen entrance and exit as well.
+        const getEntryOverlapScrollDistance = () =>
+          (getEntryStartRoll() - getEntryRollAtPin()) * pace;
+        const getExitOverlapScrollDistance = () =>
+          (getExitEndRoll() - getExitRollAtRelease()) * pace;
         const getTotalDistance = () =>
-          getEdgeRoll() * 2 + getCenterDistance();
+          getEntryStartRoll() + getCenterDistance() + getExitEndRoll();
+        const getPinnedScrollDistance = () =>
+          getTotalDistance() * pace -
+          getEntryOverlapScrollDistance() -
+          getExitOverlapScrollDistance();
+
+        // Keep the stage fixed only for the central Music sequence. This starts
+        // at the same established boundary as before, but releases before the
+        // horizontal motion ends so Visuals and the remaining vinyl exit can
+        // coexist. Refresh this first so the motion trigger can safely derive
+        // its numeric boundaries from the pin's current measured positions.
+        const pinTrigger = ScrollTrigger.create({
+          trigger: pinStage,
+          start: () => `top top+=${getSectionHeaderHeight()}`,
+          end: () => `+=${getPinnedScrollDistance()}`,
+          pin: true,
+          anticipatePin: 1,
+          refreshPriority: 1,
+        });
 
         const tween = gsap.fromTo(
           track,
-          { x: () => getEdgeRoll() },
+          { x: () => getEntryStartRoll() },
           {
-            x: () => -(getCenterDistance() + getEdgeRoll()),
+            x: () => -(getCenterDistance() + getExitEndRoll()),
             ease: "none",
             scrollTrigger: {
               trigger: pinStage,
-              start: `top top+=${headerHeight}`,
-              end: () => `+=${getTotalDistance() * SCROLL_PACE_MULTIPLIER}`,
+              start: () =>
+                pinTrigger.start - getEntryOverlapScrollDistance(),
+              end: () => pinTrigger.end + getExitOverlapScrollDistance(),
               scrub: 0.5,
-              pin: true,
-              anticipatePin: 1,
               invalidateOnRefresh: true,
               onUpdate: (self) => {
+                scrollDirection = self.direction < 0 ? -1 : 1;
                 updateCardEmphasis();
                 updateRulerTicks(self.progress);
               },
@@ -280,10 +446,10 @@ export default function Music() {
         updateRulerTicks(0);
 
         return () => {
-          wrapper.setAttribute("data-pinned", "false");
           tween.scrollTrigger?.kill();
           tween.kill();
-          rulerTicks.innerHTML = "";
+          pinTrigger.kill();
+          resetToDocumentFlow();
         };
       }
     );
@@ -311,27 +477,46 @@ export default function Music() {
           <div className={styles.ruler} aria-hidden="true" />
           <div className={styles.rulerTicks} ref={rulerTicksRef} aria-hidden="true" />
           <ul className={styles.track} ref={trackRef}>
-            {MUSIC_ITEMS.map((item, index) => (
-              <li
-                key={item.id}
-                data-card
-                data-active={index === 0 ? "true" : "false"}
-                className={styles.card}
-              >
-                <div className={styles.disc}>
-                  <div className={styles.artwork}>
-                    <Image
-                      src={item.artwork}
-                      alt={`${item.title} artwork`}
-                      fill
-                      sizes="(min-width: 1024px) 20vw, 60vw"
-                    />
+            {MUSIC_ITEMS.map((item, index) => {
+              const viewLabel = item.type === "mix" ? "view mix" : "view release";
+
+              return (
+                <li
+                  key={item.id}
+                  data-card
+                  data-active={index === 0 ? "true" : "false"}
+                  className={styles.card}
+                >
+                  <div className={styles.disc}>
+                    <div className={styles.discVisual}>
+                      <div className={styles.artwork}>
+                        <Image
+                          src={item.artwork}
+                          alt={`${item.title} artwork`}
+                          fill
+                          sizes="(min-width: 1024px) 20vw, 60vw"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <p className={styles.metadata}>{item.type}</p>
-                <h3 className={styles.title}>{item.title}</h3>
-              </li>
-            ))}
+                  <p className={styles.metadata}>{item.type}</p>
+                  <div className={styles.titleGroup}>
+                    <h3 className={styles.title}>{item.title}</h3>
+                    <p className={styles.year}>({item.year})</p>
+                  </div>
+                  <button type="button" className={styles.viewControl}>
+                    <span className={styles.viewLabelMask}>
+                      <span className={styles.viewLabelRoll}>
+                        <span className={styles.viewLabel}>{viewLabel}</span>
+                        <span className={styles.viewLabel} aria-hidden="true">
+                          {viewLabel}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

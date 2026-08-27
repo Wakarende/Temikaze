@@ -130,11 +130,29 @@
   padding: 0;
 }
 
-html,
-body {
+/* The page must scroll the VIEWPORT, not an inner box.
+
+   height: 100% together with overflow-x: hidden applied to <body> made body
+   itself a viewport-height scroll container holding the entire document. That
+   is what broke wheel scrolling over the pinned Music section: ScrollTrigger
+   pins by setting position: fixed, and a fixed element's containing block is
+   the viewport, so the browser chained a wheel gesture over it to the viewport
+   rather than to body — and the viewport had no scrollable overflow, so the
+   gesture was swallowed. Dragging the scrollbar still worked because that sets
+   body.scrollTop directly and never consults the scroll chain.
+
+   overflow-x stays on the root element, where it propagates to the viewport
+   and clips horizontal overflow document-wide, which is all it was ever for.
+   Body must not repeat it: doing so stops the propagation applying to body and
+   makes body a scroll container again, bringing the bug straight back. */
+html {
   height: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+}
+
+body {
+  max-width: 100vw;
 }
 
 /* Offsets anchor-jump targets so the sticky header never clips a section's

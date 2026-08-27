@@ -1,6 +1,7 @@
 export type MusicItem = {
   id: string;
   title: string;
+  year: number;
   type: "release" | "mix";
   artwork: string;
 };
@@ -11,24 +12,28 @@ export const MUSIC_ITEMS: MusicItem[] = [
   {
     id: "nia",
     title: "Nia",
+    year: 2024,
     type: "release",
     artwork: "/images/music/nia.webp",
   },
   {
     id: "let-go",
     title: "Let Go",
+    year: 2024,
     type: "release",
     artwork: "/images/music/let-go.webp",
   },
   {
     id: "gone",
     title: "Gone",
+    year: 2023,
     type: "release",
     artwork: "/images/music/gone.webp",
   },
   {
     id: "mums-garage-radio",
-    title: "Mum's Garage Radio",
+    title: "Mum's Garage",
+    year: 2026,
     type: "mix",
     artwork: "/images/music/mums-garage-radio.jpg",
   },
