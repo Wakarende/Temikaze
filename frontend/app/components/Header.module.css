@@ -65,7 +65,7 @@
   justify-self: start;
   font-family: var(--font-display);
   font-weight: var(--weight-button);
-  letter-spacing: var(--tracking-hero);
+  letter-spacing: var(--tracking-metadata);
   text-transform: lowercase;
   font-size: 1.5rem;
   color: var(--foreground);

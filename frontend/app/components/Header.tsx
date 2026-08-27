@@ -9,7 +9,7 @@ const NAV_LINKS = [
 export default function Header() {
   return (
     <header className={styles.header}>
-      <div className={`container ${styles.inner}`}>
+      <div className={`page-shell ${styles.inner}`}>
         <a href="#hero" className={styles.wordmark}>
           Temikaze
         </a>

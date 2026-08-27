@@ -1,13 +1,23 @@
+/* No min-height. The Hero is as tall as the identity band plus the
+   photograph at its natural ratio, and nothing else. A 100vh floor used to
+   guarantee a full-screen Hero, but once the image sizes itself that floor
+   only matters where the natural height is shorter than the viewport — narrow
+   screens — where it produced a band of empty cream below the photograph. */
 .hero {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 /* Identity band */
 
+/* The vertical padding is asymmetric on purpose, and the two halves are not
+   interchangeable. A cap-height-only word sits high in its line box: with
+   --leading-hero the ink starts ~0.056em below the box top but ends ~0.041em
+   below the box bottom. Equal padding therefore reads as top-heavy. The extra
+   bottom padding cancels that overhang so the cream above and below the
+   glyphs measures the same, which is what the reference shows. */
 .identity {
-  padding-block: clamp(2rem, 6vw, 4rem);
+  padding-block: clamp(0.4rem, 0.4vw, 0.5rem) clamp(1rem, 1.6vw, 1.7rem);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -26,43 +36,128 @@
   color: var(--foreground);
 }
 
+/* A left-aligned stack, not right-aligned text. The block as a whole still
+   sits at the right of the identity row (space-between puts it there), but its
+   contents start on a common left edge so the artist bio control lines up
+   directly beneath the descriptor — as in the reference. */
 .supporting {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
   font-family: var(--font-serif);
   font-size: var(--text-h3);
   line-height: var(--leading-h3);
   color: var(--foreground);
-  text-align: right;
   padding-top: 0.5rem;
 }
 
-.supporting p + p {
-  margin-top: 0.25rem;
+/* --- Artist bio control -------------------------------------------------- */
+
+/* Outlined pill in the Hero's own monochrome palette. Nothing about it changes
+   on hover — no colour shift, no background inversion, no border change, no
+   movement of the control itself. The entire interaction is the label roll
+   below. */
+.bioButton {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  letter-spacing: var(--tracking-button);
+  line-height: 1.25;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid var(--button-border);
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+}
+
+/* The masked vertical label roll, reused from the Booking pills: same mask
+   height, same two-label structure, same 340ms and cubic-bezier(0.22, 1,
+   0.36, 1), same duplicate-label technique, and the same :hover trigger that
+   restarts on its own each time the selector re-matches. Leaving mid-roll
+   drops the animation and the stack returns to its resting offset; because
+   both labels carry the same word that reset is invisible. No state, so rapid
+   hovering cannot strand a duplicate or leave a label out of position.
+
+   Kept as local copies rather than shared with BookingContact.module.css:
+   Booking's .pill also carries icon layout and hover brightening that this
+   control must not have, so the two share the technique, not the rules. */
+.labelMask {
+  display: block;
+  overflow: hidden;
+  height: 1.25em;
+}
+
+.roll {
+  display: block;
+  will-change: transform;
+}
+
+.label {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.bioButton:hover .roll {
+  animation: rollUp 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rollUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
 }
 
 /* Image band */
 
+/* A single-cell grid with both children in the same cell, so they stack
+   without either being taken out of flow.
+
+   This is what lets the photograph set the band's height while the cards still
+   overlay it. Previously the image was absolutely positioned, so it could not
+   contribute any height and the band needed min-height: 80vh + flex: 1 to have
+   a size at all — which is precisely what forced the crop. Here the image is
+   the tallest in-flow item, so the row is exactly as tall as the photograph,
+   and the card stack simply shares the cell. */
 .imageBand {
-  position: relative;
-  min-height: 80vh;
-  flex: 1;
+  display: grid;
+  grid-template-areas: "hero";
 }
 
 .imageClip {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
+  grid-area: hero;
   animation: heroReveal 0.7s cubic-bezier(0.25, 1, 0.5, 1) 0.1s both;
 }
 
+/* Width scales with the viewport; height follows from the intrinsic ratio.
+   No object-fit, no object-position and no scale — with the box sized by the
+   image itself there is nothing left to fit the image into, so nothing is
+   cropped at any width. */
 .image {
-  object-fit: cover;
-  object-position: center 30%;
-  transform: scale(1.15);
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* Status cards */
 
 .cardStack {
+  /* Shares the image's grid cell. align-self/justify-self: start keep the
+     stack at its own size instead of being stretched to fill the cell, which
+     is also what leaves sticky a range to travel through: a sticky grid item
+     is constrained by its grid area, so the cards follow the reader down the
+     photograph and stop at its bottom edge rather than escaping into Music. */
+  grid-area: hero;
+  align-self: start;
+  justify-self: start;
   position: sticky;
   top: calc(var(--header-height) + 1.5rem);
   z-index: 1;
@@ -70,8 +165,28 @@
   flex-direction: column;
   gap: 1rem;
   width: fit-content;
-  margin-left: var(--gutter);
+  /* The same token the navigation and the Hero identity row start from, so
+     the card stack's left edge lands on the page's single alignment line.
+     The image band is full-bleed, so this measures from the viewport edge —
+     which is exactly where .page-shell's padding edge is too. */
+  margin-left: var(--page-gutter);
+  /* The stack's own box is the travel boundary. A sticky item stops when its
+     bottom edge reaches the bottom of its containing block — here the image's
+     grid area — so with padding-top alone the element's bottom edge was the
+     last card's bottom edge, and the card came to rest flush against the
+     photograph's edge.
+
+     Padding-bottom moves the element's edge below the last card, so the stack
+     runs out of travel that much earlier and a deliberate gap is left. It is
+     the same mechanism as the existing padding-top, just at the other end.
+
+     Chosen over a padded wrapper element because a wrapper would have to
+     stretch across the whole photograph to define the boundary, putting an
+     invisible box over the image that swallows pointer events. Scaling by vw
+     keeps the gap proportional to the image, whose height tracks the viewport
+     width now that it holds its natural ratio. */
   padding-top: 1.5rem;
+  padding-bottom: clamp(1.5rem, 2.5vw, 2.75rem);
 }
 
 .card {
@@ -158,6 +273,11 @@
     animation: none;
   }
 
+  /* The decorative roll goes; the control stays perfectly usable without it. */
+  .bioButton:hover .roll {
+    animation: none;
+  }
+
   .card {
     transition: none;
   }
@@ -176,10 +296,13 @@
   .identity {
     display: block;
     width: 100%;
+    /* The title is small enough here that the desktop's near-zero top padding
+       would crowd it against the navigation's dotted rule, and the band is
+       driven by the stacked right-hand block rather than by the title. */
+    padding-block: 1rem 1.75rem;
   }
 
   .supporting {
-    text-align: left;
     padding-top: 1rem;
   }
 

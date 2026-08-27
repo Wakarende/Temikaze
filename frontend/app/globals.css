@@ -29,11 +29,17 @@
   /* Layout, see MASTER_SPEC.md Section 8 */
   --content-max-width: 1440px;
   --gutter: clamp(1.5rem, 4vw, 4rem);
+  /* The primary page shell's horizontal gutter. This is the single value the
+     navigation, the Hero identity row and the Hero card stack all start from,
+     so the three share one vertical alignment line at every width.
+     Deliberately much tighter than --gutter, which still governs the centred
+     content sections below Hero. */
+  --page-gutter: clamp(1.25rem, 2.2vw, 3rem);
   --header-height: 70px;
   --section-spacing: clamp(4rem, 8vw, 8rem);
 
   /* Typography scale (desktop values), see MASTER_SPEC.md Section 5 */
-  --text-hero: clamp(3.5rem, 12vw, 11rem);
+  --text-hero: clamp(3.5rem, 13vw, 12.5rem);
   --text-h2: clamp(2.5rem, 6vw, 5rem);
   --text-h3: clamp(1.5rem, 2.5vw, 2.2rem);
   --text-body: 1rem;
@@ -52,7 +58,14 @@
   --weight-eyebrow: 400;
   --weight-button: 600;
 
-  --leading-hero: 0.85;
+  /* Tight enough that the line box hugs the cap height rather than carrying
+     dead leading above and below it. Barlow Condensed reports roughly a 1.0em
+     ascent and 0.2em descent, but uppercase ink is only ~0.705em tall, so at
+     0.85 nearly a quarter of the band was empty line box. At 0.72 the ink
+     slightly overflows the line box at the bottom, which is intentional and
+     accounted for in the Hero's asymmetric padding. Used only by the Hero
+     wordmark. */
+  --leading-hero: 0.72;
   --leading-h2: 0.95;
   --leading-h3: 1.2;
   --leading-body: 1.65;
@@ -143,6 +156,19 @@ a {
   max-width: var(--content-max-width);
   margin-inline: auto;
   padding-inline: var(--gutter);
+}
+
+/* The primary page shell: full-bleed, with one shared horizontal gutter.
+   Used by the navigation and the Hero identity row so their left edges
+   coincide exactly; the Hero card stack starts from the same token.
+
+   The absence of margin-inline: auto matters for more than width. An auto
+   margin on the cross axis cancels a flex item's stretch, so .container used
+   inside Hero's column flex collapsed to fit-content and centred itself —
+   which is what pushed the Hero title 71.75px right of the navigation
+   wordmark at 1440px, independently of the gutter value. */
+.page-shell {
+  padding-inline: var(--page-gutter);
 }
 
 /* Utility: keeps a heading in the document outline and the accessibility tree
