@@ -10,6 +10,27 @@
   background: var(--background);
   border-top: var(--divider);
   border-bottom: var(--divider);
+  /* Matches the primary navigation's slide, so the two move together rather
+     than this band snapping into place while the navigation is still on its
+     way. See the offset rule below for why this animates top. */
+  transition: top 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Whenever the primary navigation is showing it takes the topmost position, so
+   this band drops by exactly its measured height and the two stack without
+   overlapping. The offset lives here only — NavReturn publishes the height and
+   no component hard-codes a pixel value.
+
+   The selector is the absence of the attribute rather than its presence,
+   because the navigation is visible by default — including on first paint,
+   before NavReturn's effect has run.
+
+   Animating top rather than transform is deliberate. top only has an effect
+   while this band is actually stuck, so it cannot disturb the band's position
+   in normal flow; a transform would stay applied once the band unsticks and
+   leave it floating below its flow position on the way back up into Hero. */
+:global(html:not([data-nav-hidden="true"])) .header {
+  top: var(--primary-header-height, 0px);
 }
 
 .inner {
@@ -106,5 +127,10 @@
   .rollUp {
     animation: none;
     transform: translateY(-50%);
+  }
+
+  /* The band still moves aside for the navigation; it just does not slide. */
+  .header {
+    transition: none;
   }
 }

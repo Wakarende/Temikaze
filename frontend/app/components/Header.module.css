@@ -1,35 +1,79 @@
-/* Normal document flow, not sticky. This navigation belongs to the Hero-side
-   experience: it scrolls away as the reader leaves Hero, and the content run's
-   shared editorial header takes over from Music onward. Previously it was
-   position: sticky, which left it permanently stacked above the section header
-   — two headers at the top at once, which the reference never shows. */
+/* Permanently sticky, and shown or hidden by sliding on its own transform.
+
+   Sticky rather than fixed on purpose: the header keeps its space in normal
+   document flow, so revealing or hiding it can never shift the page under the
+   reader, and at the very top the pinned position and the flow position
+   coincide.
+
+   The visibility is a transform because position is not an animatable
+   property — toggling between relative and sticky is what made the navigation
+   appear and vanish abruptly. Two headers are still never stacked at the top
+   at once: the shared editorial header moves down by exactly this one's
+   height whenever it is showing. */
 .header {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 50;
   background: var(--background);
-  border-bottom: var(--divider);
+  transform: translateY(0);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* The reference uses distinct, widely spaced dots rather than the tightly
+   packed pattern produced by border-style: dotted. Kept local to the primary
+   navbar so the shared Music/Visuals rules retain their existing treatment. */
+.header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background-image: radial-gradient(
+    circle at 1.5px 50%,
+    var(--foreground) 1.5px,
+    transparent 1.6px
+  );
+  background-repeat: repeat-x;
+  background-size: 16px 3px;
+  pointer-events: none;
+}
+
+/* Scroll-direction visibility. NavReturn sets this attribute while the reader
+   is scrolling down and removes it on any upward scroll, anywhere on the page,
+   so the navigation slides up out of the viewport and back down again.
+
+   -100% is exactly the header's own height, so it clears the top edge
+   completely and no sliver is left showing. The shared Music/Visuals header
+   animates its own offset over the same duration and easing, so the two move
+   as one and never overlap mid-slide. */
+:global(html[data-nav-hidden="true"]) .header {
+  transform: translateY(-100%);
 }
 
 .inner {
   min-height: var(--header-height);
   padding-block: 0.75rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
 .wordmark {
+  grid-column: 1;
+  justify-self: start;
   font-family: var(--font-display);
-  font-weight: var(--weight-hero);
+  font-weight: var(--weight-button);
   letter-spacing: var(--tracking-hero);
-  text-transform: uppercase;
+  text-transform: lowercase;
   font-size: 1.5rem;
   color: var(--foreground);
 }
 
 .nav {
+  grid-column: 2;
+  justify-self: center;
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -44,6 +88,8 @@
 }
 
 .navList a {
+  position: relative;
+  display: inline-block;
   font-family: var(--font-sans);
   font-weight: var(--weight-button);
   font-size: var(--text-button);
@@ -51,31 +97,30 @@
   color: var(--foreground);
 }
 
-.navList a:hover {
-  color: var(--foreground-muted);
+.navList a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.25rem;
+  width: 100%;
+  height: 3px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.cta {
-  font-family: var(--font-sans);
-  font-weight: var(--weight-button);
-  font-size: var(--text-button);
-  letter-spacing: var(--tracking-button);
-  border: 1px solid var(--button-border);
-  border-radius: 999px;
-  padding: 0.5rem 1.25rem;
-  color: var(--foreground);
-  background: var(--background);
-  transition: background-color 0.2s ease, color 0.2s ease;
-  white-space: nowrap;
-}
-
-.cta:hover,
-.cta:focus-visible {
-  background: var(--foreground);
-  color: var(--background);
+.navList a:hover::after,
+.navList a:focus-visible::after {
+  transform: scaleX(1);
 }
 
 @media (max-width: 767px) {
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
   .wordmark {
     font-size: 1.15rem;
   }
@@ -91,5 +136,17 @@
     flex-wrap: wrap;
     gap: 1rem;
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navList a::after {
+    transition: none;
+  }
+
+  /* The navigation still hides and returns — that is behaviour rather than
+     decoration — it simply arrives and leaves without the slide. */
+  .header {
+    transition: none;
   }
 }

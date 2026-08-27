@@ -87,13 +87,16 @@ export default function SectionHeader({
     // cheap enough not to need a frame gate, and it keeps the section title in
     // step with the scroll position with no extra machinery.
     const evaluate = () => {
-      const headerHeight = el.offsetHeight;
+      // The band's own lower edge, read live rather than from its height, so
+      // the boundary stays correct when the primary navigation returns above
+      // it and pushes this header down (see NavReturn).
+      const line = el.getBoundingClientRect().bottom;
 
       let next = sections[0];
       for (const section of sections) {
         const node = document.getElementById(section.id);
         if (!node) continue;
-        if (node.getBoundingClientRect().top <= headerHeight + 1) next = section;
+        if (node.getBoundingClientRect().top <= line + 1) next = section;
       }
 
       setRoll((state) =>

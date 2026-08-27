@@ -21,9 +21,6 @@ export default function Header() {
               </li>
             ))}
           </ul>
-          <a href="#booking" className={styles.cta}>
-            book artist
-          </a>
         </nav>
       </div>
     </header>

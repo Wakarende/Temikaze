@@ -48,8 +48,8 @@ export default function Home() {
             CONTENT_SECTIONS above. */}
         <BookingContact />
       </main>
-      {/* Renders nothing; drives the bottom-triggered return of the primary
-          navigation through one attribute on the document element. */}
+      {/* Renders nothing; drives the scroll-direction visibility of the
+          primary navigation through one attribute on the document element. */}
       <NavReturn />
     </>
   );
