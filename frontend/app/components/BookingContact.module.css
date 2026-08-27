@@ -1,0 +1,318 @@
+/* The abrupt light-to-dark terminal transition. This is the page's closing
+   section: it sits outside the content run, so the shared editorial header has
+   already released before it begins and never floats over it. */
+.section {
+  background: var(--background-dark);
+  color: var(--foreground-light);
+  /* Asymmetric on purpose. The generous opening keeps the light-to-dark
+     transition abrupt; the bottom is deliberately short so the contact row
+     reads as the last line of the page rather than the top of another tall
+     section with dead space beneath it. */
+  padding-block: clamp(3.5rem, 9vw, 7rem) 1rem;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+/* --- Signature ------------------------------------------------------------ */
+
+.signature {
+  width: min(100%, 26rem);
+}
+
+.signatureSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The mask stroke. White reveals the artwork beneath it; the path is stroked
+   thickly enough to cover the glyph band as the "pen" passes along it.
+   pathLength=1 normalises the dash maths regardless of the real path length. */
+.maskPath {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 320;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  /* Default is fully revealed: with no JavaScript, or under reduced motion,
+     the signature is simply complete rather than invisible. */
+  stroke-dashoffset: 0;
+}
+
+/* Armed by JS before paint, which hides the artwork ready for the reveal. */
+.signature[data-armed="true"] .maskPath {
+  stroke-dashoffset: 1;
+}
+
+.signature[data-written="true"] .maskPath {
+  animation: signatureWrite 2200ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes signatureWrite {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- Headline ------------------------------------------------------------- */
+
+.headline {
+  font-family: var(--font-display);
+  font-weight: var(--weight-h2);
+  font-size: var(--text-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground-light);
+}
+
+/* --- Primary destination -------------------------------------------------- */
+
+.primaryRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 60rem;
+}
+
+.rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--foreground-light-muted);
+  opacity: 0.5;
+}
+
+/* Prominent, but deliberately not so large that the section reads as a
+   generic link-in-bio landing page.
+
+   Compound selector on purpose: .pill is declared later in this file, so at
+   equal specificity its font-size and padding would win and the primary CTA
+   would render identically to the secondary social pills. */
+.pill.primaryPill {
+  font-size: var(--text-h3);
+  padding: 0.9rem 2.5rem;
+}
+
+/* --- Socials -------------------------------------------------------------- */
+
+.socials {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Divider and contact -------------------------------------------------- */
+
+.footerDirectory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.divider {
+  width: 100vw;
+  max-width: none;
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: var(--foreground-light-muted);
+  opacity: 0.5;
+}
+
+/* The last row on the page. It spans the inner content width so its compact
+   contact cluster can sit at the bottom-right without separating the label
+   from the address. */
+.contactRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+}
+
+.contactLabel {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  color: var(--foreground-light-muted);
+  font-weight: var(--weight-button);
+}
+
+/* --- Pills ---------------------------------------------------------------- */
+
+/* Outlined, not filled: the control sits on the section's own dark ground with
+   a thin muted border and muted content, and brightens toward white on hover.
+   Filled cream pills read as too busy against this composition.
+
+   Note this section's controls deliberately DO have a hover treatment, unlike
+   the StageVisuals prev/next pills, which stay identical at rest and on hover.
+   The two are separate interaction languages on purpose. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  letter-spacing: var(--tracking-button);
+  line-height: 1.25;
+  color: var(--foreground-light-muted);
+  background: transparent;
+  border: 1px solid var(--foreground-light-muted);
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Icons inherit the control's colour, so they brighten with the label rather
+   than being lit independently. Sized against the cap height so they read as
+   the same visual weight as the text beside them. */
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: 0 0 auto;
+}
+
+/* Hover and keyboard focus get the same brightening, so a keyboard user is
+   never worse off than a pointer user. The pill itself stays geometrically
+   stable — no scale, no translate. The motion belongs to the label. */
+.pill:hover,
+.pill:focus-visible {
+  color: var(--foreground-light);
+  border-color: var(--foreground-light);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--focus-dark);
+  outline-offset: 3px;
+}
+
+.labelMask {
+  display: block;
+  overflow: hidden;
+  height: 1.25em;
+}
+
+.roll {
+  display: block;
+  will-change: transform;
+}
+
+.label {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+/* The masked vertical label roll, reused from the StageVisuals prev/next
+   pills: same two-label structure, same mask height, same keyframes, same
+   340ms and cubic-bezier(0.22, 1, 0.36, 1), same duplicate-label technique.
+   One consistent direction for every outward link — the label exits upward
+   and its identical duplicate arrives from below.
+
+   The only difference is the trigger. StageVisuals restarts it from a press
+   counter; Booking runs it from :hover, which restarts on its own every time
+   the selector re-matches. Leaving mid-roll simply drops the animation and the
+   stack returns to its resting offset — and because both labels carry the same
+   word, that reset is invisible. No state, so rapid hovering cannot strand a
+   duplicate or leave a label out of position. */
+.pill:hover .roll {
+  animation: rollUp 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rollUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/* --- Mobile --------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .signature {
+    width: min(100%, 17rem);
+  }
+
+  .primaryRow {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* The flanking rules read as decoration at this width and would sit as two
+     stray lines above and below the CTA once the row stacks. */
+  .rule {
+    display: none;
+  }
+
+  /* Taller on touch: the desktop padding renders these at ~38px, below a
+     comfortable tap target. This brings them to ~45px without changing the
+     pill's shape or type. */
+  .pill {
+    padding-block: 0.8rem;
+  }
+
+  .pill.primaryPill {
+    font-size: var(--text-body);
+    padding: 0.9rem 2rem;
+  }
+
+  .contactLabel {
+    font-size: var(--text-body);
+  }
+
+  /* Centred rather than split. At this width the rule's two ends are close
+     enough together that space-between reads as a broken row, and the pair
+     wraps to two centred lines when the address will not fit alongside the
+     label. */
+  .contactRow {
+    justify-content: center;
+    text-align: center;
+    gap: 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Decorative movement goes; the hover brightening stays, since it is a
+     colour change rather than motion and is what makes the control legible
+     as interactive. */
+  .pill:hover .roll,
+  .signature[data-written="true"] .maskPath {
+    animation: none;
+  }
+
+  .pill {
+    transition: none;
+  }
+
+  /* Reduced motion never arms the mask, but keep this explicit so the
+     signature can never be left hidden. */
+  .signature[data-armed="true"] .maskPath {
+    stroke-dashoffset: 0;
+  }
+}
