@@ -108,6 +108,24 @@ export default function SectionHeader({
           run.getBoundingClientRect().top +
           parseFloat(getComputedStyle(run).paddingTop || "0");
         el.dataset.stuck = rect.top - runTop > 1 ? "true" : "false";
+
+        // A sticky child is naturally pushed out over its own height when its
+        // containing block ends. Without an explicit release state, that
+        // leaves the last strip of the VISUALS band visible at the top while
+        // Booking has already entered beneath it, especially in a shorter
+        // viewport. Mark the exact geometric moment the content run begins
+        // pushing the header out so CSS can remove the shared shell for that
+        // handoff. This is derived from the live run boundary, not a viewport
+        // breakpoint or hard-coded scroll position, and reverses automatically
+        // when the reader scrolls back into Visuals.
+        const runBottom = run.getBoundingClientRect().bottom;
+        const followingSection = run.nextElementSibling;
+        const releaseBoundary =
+          followingSection instanceof HTMLElement
+            ? followingSection.getBoundingClientRect().top
+            : runBottom;
+        el.dataset.released =
+          releaseBoundary <= rect.bottom + 1 ? "true" : "false";
       }
 
       // The band's own lower edge, read live rather than from its height, so

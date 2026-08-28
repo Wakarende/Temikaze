@@ -2,7 +2,7 @@
    bounds it, so the header takes over when Music arrives and releases at the
    end of the run rather than following the reader forever. */
 .header {
-  --section-header-content-h: clamp(3.5rem, 7vw, 5.5rem);
+  --section-header-content-h: clamp(2.75rem, 5vw, 4rem);
 
   position: sticky;
   top: 0;
@@ -15,6 +15,23 @@
      beneath it. */
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
+}
+
+/* Once the bottom of the Music/Visuals content run reaches the shared
+   header's lower edge, the sticky element has entered its natural push-out
+   phase. Hide the complete editorial shell at that real boundary so no
+   cropped VISUALS fragment remains above Booking. Visibility is used instead
+   of display so the element keeps its measured height and sticky geometry;
+   scrolling upward simply removes the data state and restores it beneath the
+   primary navigation without a layout jump. */
+.header[data-released="true"] {
+  background: var(--background-dark);
+}
+
+.header[data-released="true"] .inner,
+.header[data-released="true"]::before,
+.header[data-released="true"]::after {
+  visibility: hidden;
 }
 
 /* The persistent rule. The band always closes with one, in every state and for
@@ -65,7 +82,7 @@
      and the old 1.5rem top and bottom left the band roughly a third empty
      cream. The slot height below still does the real work of setting the
      band's size; this is only the breathing room around it. */
-  padding-block: clamp(0.4rem, 0.7vw, 0.75rem);
+  padding-block: clamp(0.25rem, 0.4vw, 0.4rem);
   /* Fixed so the band does not change height when the descriptor is empty —
      Visuals has no approved descriptor, and a sticky header that resized at
      the section boundary would visibly jolt the content beneath it. */
@@ -113,7 +130,7 @@
   height: var(--section-header-content-h);
   font-family: var(--font-display);
   font-weight: var(--weight-h2);
-  font-size: var(--text-h2);
+  font-size: clamp(2.25rem, 4.5vw, 4rem);
   line-height: var(--leading-h2);
   letter-spacing: var(--tracking-h2);
   text-transform: uppercase;
@@ -127,7 +144,7 @@
   justify-content: flex-end;
   height: var(--section-header-content-h);
   font-family: var(--font-serif);
-  font-size: clamp(1rem, 2vw, 1.75rem);
+  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
   line-height: var(--leading-h3);
   color: var(--foreground);
   text-align: right;
@@ -138,11 +155,15 @@
    band short and avoids any chance of the two sides colliding. */
 @media (max-width: 767px) {
   .header {
-    --section-header-content-h: clamp(2.25rem, 11vw, 3rem);
+    --section-header-content-h: clamp(2rem, 9vw, 2.5rem);
   }
 
   .inner {
-    padding-block: 0.5rem;
+    padding-block: 0.3rem;
+  }
+
+  .title {
+    font-size: clamp(2rem, 10vw, 2.5rem);
   }
 
   .descriptorMask {

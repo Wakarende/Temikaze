@@ -14,7 +14,7 @@
 .audioControlRow {
   position: absolute;
   inset-inline: 0;
-  top: clamp(0.75rem, 1.2vw, 1.25rem);
+  top: -1.5rem;
   z-index: 2;
   pointer-events: none;
 }
