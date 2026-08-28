@@ -1,6 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -76,12 +82,232 @@ const CARD_ACTIVE_OPACITY = 1;
 // handoff region, remain at the stable muted state" rather than fading
 // further the more distant a card is.
 const CARD_HANDOFF_FRACTION = 0.22;
+const EXIT_OUTSIDE_FRACTION_AT_RELEASE = 0.6;
+const PREVIEW_VOLUME = 0.5;
+const PREVIEW_CROSSFADE_MS = 400;
+const VINYL_DUST_SRC = "/audio/sfx/vinyl-dust.mp3";
+const VINYL_DUST_VOLUME = 0.28;
+const VINYL_DUST_DURATION_MS = 650;
+const VINYL_DUST_LEAD_MS = 100;
+
+const setPreviewVolume = (player: HTMLAudioElement, volume: number) => {
+  player.volume = volume;
+};
+
+const restartPreview = (player: HTMLAudioElement) => {
+  player.currentTime = 0;
+  player.volume = 0;
+};
+
+const releasePreview = (player: HTMLAudioElement) => {
+  player.onended = null;
+  player.pause();
+  player.volume = 0;
+  player.currentTime = 0;
+  player.removeAttribute("src");
+  player.load();
+};
 
 export default function Music() {
   const pinStageRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLUListElement>(null);
   const rulerTicksRef = useRef<HTMLDivElement>(null);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const audioEnabledRef = useRef(false);
+  const musicActiveRef = useRef(false);
+  const activeAudioIndexRef = useRef(-1);
+  const currentAudioIndexRef = useRef(-1);
+  const previewPlayersRef = useRef<HTMLAudioElement[]>([]);
+  const vinylDustRef = useRef<HTMLAudioElement | null>(null);
+  const fadeFrameRef = useRef<number | null>(null);
+  const incomingStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const vinylDustTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelCrossfade = useCallback(() => {
+    if (fadeFrameRef.current !== null) {
+      cancelAnimationFrame(fadeFrameRef.current);
+      fadeFrameRef.current = null;
+    }
+    if (incomingStartTimerRef.current !== null) {
+      clearTimeout(incomingStartTimerRef.current);
+      incomingStartTimerRef.current = null;
+    }
+  }, []);
+
+  const stopPreview = useCallback((player: HTMLAudioElement) => {
+    player.pause();
+    restartPreview(player);
+  }, []);
+
+  const stopVinylDust = useCallback(() => {
+    if (vinylDustTimerRef.current !== null) {
+      clearTimeout(vinylDustTimerRef.current);
+      vinylDustTimerRef.current = null;
+    }
+    if (vinylDustRef.current) stopPreview(vinylDustRef.current);
+  }, [stopPreview]);
+
+  const playVinylDust = useCallback(() => {
+    const player = vinylDustRef.current;
+    if (!player) return;
+
+    stopVinylDust();
+    restartPreview(player);
+    setPreviewVolume(player, VINYL_DUST_VOLUME);
+    void player.play().catch(() => stopVinylDust());
+    vinylDustTimerRef.current = setTimeout(() => {
+      stopVinylDust();
+    }, VINYL_DUST_DURATION_MS);
+  }, [stopVinylDust]);
+
+  const preparePreviews = useCallback(() => {
+    if (previewPlayersRef.current.length === 0) {
+      previewPlayersRef.current = MUSIC_ITEMS.map((item) => {
+        const player = new Audio(item.preview);
+        player.preload = "auto";
+        player.loop = true;
+        setPreviewVolume(player, 0);
+        player.load();
+        return player;
+      });
+    }
+
+    if (!vinylDustRef.current) {
+      const vinylDust = new Audio(VINYL_DUST_SRC);
+      vinylDust.preload = "auto";
+      vinylDust.loop = false;
+      setPreviewVolume(vinylDust, 0);
+      vinylDust.load();
+      vinylDustRef.current = vinylDust;
+    }
+
+    return previewPlayersRef.current;
+  }, []);
+
+  const crossfadeTo = useCallback(
+    (nextIndex: number, withVinylDust = false) => {
+      const players = previewPlayersRef.current;
+      if (players.length === 0) return;
+      const outgoingIndex = currentAudioIndexRef.current;
+      if (outgoingIndex === nextIndex) return;
+
+      cancelCrossfade();
+
+      if (withVinylDust) {
+        playVinylDust();
+      } else {
+        stopVinylDust();
+      }
+
+      players.forEach((player, index) => {
+        if (index !== outgoingIndex && index !== nextIndex) stopPreview(player);
+      });
+
+      const outgoing = outgoingIndex >= 0 ? players[outgoingIndex] : null;
+      const incoming = nextIndex >= 0 ? players[nextIndex] : null;
+      const outgoingStartVolume = outgoing?.volume ?? 0;
+      const incomingStartVolume = incoming?.volume ?? 0;
+
+      if (incoming) {
+        restartPreview(incoming);
+        const startIncoming = () => {
+          incomingStartTimerRef.current = null;
+          void incoming.play().catch(() => stopPreview(incoming));
+        };
+        if (withVinylDust) {
+          incomingStartTimerRef.current = setTimeout(
+            startIncoming,
+            VINYL_DUST_LEAD_MS
+          );
+        } else {
+          startIncoming();
+        }
+      }
+
+      currentAudioIndexRef.current = nextIndex;
+      const startedAt = performance.now();
+
+      const step = (now: number) => {
+        const progress = Math.min(
+          1,
+          (now - startedAt) / PREVIEW_CROSSFADE_MS
+        );
+        const eased = progress * progress * (3 - 2 * progress);
+
+        if (outgoing) {
+          setPreviewVolume(outgoing, outgoingStartVolume * (1 - eased));
+        }
+        if (incoming) {
+          setPreviewVolume(
+            incoming,
+            incomingStartVolume +
+              (PREVIEW_VOLUME - incomingStartVolume) * eased
+          );
+        }
+
+        if (progress < 1) {
+          fadeFrameRef.current = requestAnimationFrame(step);
+          return;
+        }
+
+        fadeFrameRef.current = null;
+        if (outgoing) stopPreview(outgoing);
+      };
+
+      fadeFrameRef.current = requestAnimationFrame(step);
+    },
+    [cancelCrossfade, playVinylDust, stopPreview, stopVinylDust]
+  );
+
+  const syncAudioPlayback = useCallback((withVinylDust = false) => {
+    if (!audioEnabledRef.current || !musicActiveRef.current) {
+      crossfadeTo(-1);
+      return;
+    }
+
+    crossfadeTo(activeAudioIndexRef.current, withVinylDust);
+  }, [crossfadeTo]);
+
+  const publishActiveAudioIndex = useCallback(
+    (nextIndex: number) => {
+      const previousIndex = activeAudioIndexRef.current;
+      if (previousIndex === nextIndex) return;
+      activeAudioIndexRef.current = nextIndex;
+      syncAudioPlayback(previousIndex >= 0 && nextIndex >= 0);
+    },
+    [syncAudioPlayback]
+  );
+
+  const toggleAudio = () => {
+    if (audioEnabledRef.current) {
+      audioEnabledRef.current = false;
+      setAudioEnabled(false);
+      crossfadeTo(-1);
+      return;
+    }
+
+    preparePreviews();
+    audioEnabledRef.current = true;
+    setAudioEnabled(true);
+    syncAudioPlayback(true);
+  };
+
+  useEffect(
+    () => () => {
+      cancelCrossfade();
+      stopVinylDust();
+      previewPlayersRef.current.forEach((player) => {
+        releasePreview(player);
+      });
+      previewPlayersRef.current = [];
+      if (vinylDustRef.current) {
+        releasePreview(vinylDustRef.current);
+        vinylDustRef.current = null;
+      }
+    },
+    [cancelCrossfade, stopVinylDust]
+  );
 
   useLayoutEffect(() => {
     const pinStage = pinStageRef.current;
@@ -96,7 +322,15 @@ export default function Music() {
     const discs = cards
       .map((card) => card.querySelector<HTMLElement>(`.${styles.disc}`))
       .filter((disc): disc is HTMLElement => disc !== null);
-    if (discs.length !== cards.length) return;
+    const discVisuals = cards
+      .map((card) => card.querySelector<HTMLElement>(`.${styles.discVisual}`))
+      .filter((disc): disc is HTMLElement => disc !== null);
+    if (
+      discs.length !== cards.length ||
+      discVisuals.length !== cards.length
+    ) {
+      return;
+    }
 
     // Desktop writes transforms/opacity directly for every scrub frame. Those
     // values must not survive a breakpoint or reduced-motion change and leak
@@ -146,7 +380,20 @@ export default function Music() {
         // the live layout rather than assumed.
         if (reducedMotion) {
           resetToDocumentFlow();
-          return;
+          publishActiveAudioIndex(0);
+          const observer = new IntersectionObserver(
+            ([entry]) => {
+              musicActiveRef.current = entry.isIntersecting;
+              syncAudioPlayback(entry.isIntersecting);
+            },
+            { threshold: 0.1 }
+          );
+          observer.observe(pinStage);
+          return () => {
+            observer.disconnect();
+            musicActiveRef.current = false;
+            syncAudioPlayback();
+          };
         }
 
         // Crossing 768px or 1024px changes the responsive card geometry and/or
@@ -181,6 +428,43 @@ export default function Music() {
               : wrapper.clientWidth;
         };
 
+        const getFinalOutsideFraction = (currentX: number) => {
+          const finalIndex = cards.length - 1;
+          // offsetWidth is deliberately used instead of getBoundingClientRect:
+          // the parent vinyl rotates while active, so its transformed bounding
+          // box changes continuously with the rotation angle. The visible
+          // circular layer's untransformed width is the stable geometry the
+          // 60%-outside boundary is actually defined against.
+          const discWidth = discVisuals[finalIndex].offsetWidth;
+          const discCenter = cardCenters[finalIndex] + currentX;
+          return gsap.utils.clamp(
+            0,
+            1,
+            (discWidth / 2 - discCenter) / discWidth
+          );
+        };
+
+        const getFinalExitActiveAmount = (currentX: number) => {
+          const outside = getFinalOutsideFraction(currentX);
+          if (outside <= EXIT_OUTSIDE_FRACTION_AT_RELEASE) return 1;
+
+          const exitProgress =
+            (outside - EXIT_OUTSIDE_FRACTION_AT_RELEASE) /
+            (1 - EXIT_OUTSIDE_FRACTION_AT_RELEASE);
+          const remaining = 1 - exitProgress;
+          return remaining * remaining * (3 - 2 * remaining);
+        };
+
+        const finalOwnsEmphasis = (currentX: number) => {
+          const finalIndex = cards.length - 1;
+          if (finalIndex === 0) return true;
+
+          const focal = wrapper.clientWidth / 2 - currentX;
+          const finalHandoff =
+            (cardCenters[finalIndex - 1] + cardCenters[finalIndex]) / 2;
+          return focal >= finalHandoff;
+        };
+
         const updateCardEmphasis = () => {
           const currentX = (gsap.getProperty(track, "x") as number) || 0;
 
@@ -212,13 +496,37 @@ export default function Music() {
               );
             });
 
+            const finalIndex = cards.length - 1;
+            const finalOwnsExit = finalOwnsEmphasis(currentX);
+            const finalActiveAmount = finalOwnsExit
+              ? getFinalExitActiveAmount(currentX)
+              : 0;
+
             cards.forEach((card, index) => {
               const isActive = index === activeIndex;
+              const opacity =
+                index === finalIndex && finalOwnsExit
+                  ? CARD_MUTED_OPACITY +
+                    finalActiveAmount *
+                      (CARD_ACTIVE_OPACITY - CARD_MUTED_OPACITY)
+                  : isActive
+                    ? CARD_ACTIVE_OPACITY
+                    : CARD_MUTED_OPACITY;
               card.style.opacity = `${
-                isActive ? CARD_ACTIVE_OPACITY : CARD_MUTED_OPACITY
+                opacity
               }`;
-              card.setAttribute("data-active", isActive ? "true" : "false");
+              const isSemanticallyActive =
+                index === finalIndex
+                  ? finalOwnsExit &&
+                    getFinalOutsideFraction(currentX) <
+                      EXIT_OUTSIDE_FRACTION_AT_RELEASE
+                  : isActive;
+              card.setAttribute(
+                "data-active",
+                isSemanticallyActive ? "true" : "false"
+              );
             });
+            publishActiveAudioIndex(activeIndex);
             return;
           }
 
@@ -267,13 +575,34 @@ export default function Music() {
             }`;
           });
 
+          // There is no following record to receive emphasis from the final
+          // item. Hold it fully active through its post-roll, then begin the
+          // mute at the exact 60%-outside point where the Music pin releases
+          // into Visuals. The remaining 40% of its exit carries the fade, so
+          // section release and de-emphasis are one reversible transition.
+          const finalIndex = cards.length - 1;
+          const finalOwnsExit = closestIndex === finalIndex;
+          if (finalOwnsExit) {
+            const finalActiveAmount = getFinalExitActiveAmount(currentX);
+            cards[finalIndex].style.opacity = `${
+              CARD_MUTED_OPACITY +
+              finalActiveAmount *
+                (CARD_ACTIVE_OPACITY - CARD_MUTED_OPACITY)
+            }`;
+          }
+
           // Kept as a semantic/discrete marker (drives the vinyl-rotation
           // CSS and could back aria-current later) — the visual emphasis
           // above no longer depends on it.
-          activeIndex = closestIndex;
+          const finalHasReachedRelease =
+            finalOwnsExit &&
+            getFinalOutsideFraction(currentX) >=
+              EXIT_OUTSIDE_FRACTION_AT_RELEASE;
+          activeIndex = finalHasReachedRelease ? -1 : closestIndex;
           cards.forEach((card, i) => {
             card.setAttribute("data-active", i === activeIndex ? "true" : "false");
           });
+          publishActiveAudioIndex(activeIndex);
         };
 
         // Ruler ticks are plain DOM elements, built once (and rebuilt on
@@ -339,19 +668,11 @@ export default function Music() {
         // leaving while Visuals rises into view. Using one scrubbed tween for
         // all three phases makes reverse scroll mirror the same geometry.
         const ENTRY_POSITION_AT_PIN_FRACTION = 0.286;
-        const EXIT_OUTSIDE_FRACTION_AT_RELEASE = 0.6;
-
-        // getBoundingClientRect measures the rendered vinyl rather than its
-        // much wider card slot. With scaling removed, this width is stable even
-        // while the parent track is translated.
-        const getDiscWidth = (disc: HTMLElement) =>
-          disc.getBoundingClientRect().width;
-
         // At the motion boundary the vinyl's nearest edge is exactly at the
         // viewport edge. At the pin boundary it retains the accepted 0.286w
         // offset, so the section becomes established while it is still moving.
         const getEntryStartRoll = () =>
-          wrapper.clientWidth / 2 + getDiscWidth(discs[0]) / 2;
+          wrapper.clientWidth / 2 + discs[0].offsetWidth / 2;
         const getEntryRollAtPin = () =>
           wrapper.clientWidth * ENTRY_POSITION_AT_PIN_FRACTION;
 
@@ -360,11 +681,11 @@ export default function Music() {
         // continues through the same tween until the disc is fully outside.
         const getExitRollAtRelease = () =>
           wrapper.clientWidth / 2 +
-          getDiscWidth(discs[discs.length - 1]) *
+          discVisuals[discVisuals.length - 1].offsetWidth *
             (EXIT_OUTSIDE_FRACTION_AT_RELEASE - 0.5);
         const getExitEndRoll = () =>
           wrapper.clientWidth / 2 +
-          getDiscWidth(discs[discs.length - 1]) / 2;
+          discVisuals[discVisuals.length - 1].offsetWidth / 2;
 
         // --- MAIN SEQUENCE -------------------------------------------------
         // The centre-to-centre span: how far the track travels between the
@@ -412,6 +733,10 @@ export default function Music() {
           pin: true,
           anticipatePin: 1,
           refreshPriority: 1,
+          onToggle: (self) => {
+            musicActiveRef.current = self.isActive;
+            syncAudioPlayback(self.isActive);
+          },
         });
 
         const tween = gsap.fromTo(
@@ -446,6 +771,8 @@ export default function Music() {
         updateRulerTicks(0);
 
         return () => {
+          musicActiveRef.current = false;
+          syncAudioPlayback();
           tween.scrollTrigger?.kill();
           tween.kill();
           pinTrigger.kill();
@@ -457,7 +784,7 @@ export default function Music() {
     return () => {
       mm.revert();
     };
-  }, []);
+  }, [publishActiveAudioIndex, syncAudioPlayback]);
 
   return (
     <section id="music" className={styles.music}>
@@ -473,7 +800,26 @@ export default function Music() {
           only the record stage; the pin now starts below the shared sticky
           header instead. */}
       <div className={styles.pinStage} ref={pinStageRef}>
-        <div className={styles.wrapper} ref={wrapperRef}>
+        <div className={`page-shell content-stage ${styles.audioControlRow}`}>
+          <button
+            type="button"
+            className={styles.audioControl}
+            aria-pressed={audioEnabled}
+            onClick={toggleAudio}
+          >
+            <span className={styles.audioLabelMask}>
+              <span className={styles.audioLabelRoll}>
+                <span className={styles.audioLabel}>
+                  {audioEnabled ? "mute audio" : "enable audio"}
+                </span>
+                <span className={styles.audioLabel} aria-hidden="true">
+                  {audioEnabled ? "mute audio" : "enable audio"}
+                </span>
+              </span>
+            </span>
+          </button>
+        </div>
+        <div className={`content-stage ${styles.wrapper}`} ref={wrapperRef}>
           <div className={styles.ruler} aria-hidden="true" />
           <div className={styles.rulerTicks} ref={rulerTicksRef} aria-hidden="true" />
           <ul className={styles.track} ref={trackRef}>

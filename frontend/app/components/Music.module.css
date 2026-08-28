@@ -7,7 +7,69 @@
    styling of its own; headerRow and wrapper are ordinary block children
    and already stack top-to-bottom without any flex context here. */
 .pinStage {
+  position: relative;
   background: var(--background);
+}
+
+.audioControlRow {
+  position: absolute;
+  inset-inline: 0;
+  top: clamp(0.75rem, 1.2vw, 1.25rem);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.audioControl {
+  pointer-events: auto;
+  min-height: 2.25rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--button-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  line-height: var(--leading-button);
+  letter-spacing: var(--tracking-button);
+  cursor: pointer;
+}
+
+.audioControl:focus-visible {
+  outline: 2px solid var(--focus-light);
+  outline-offset: 3px;
+}
+
+.audioLabelMask {
+  display: block;
+  overflow: hidden;
+  height: 1.25em;
+}
+
+.audioLabelRoll {
+  display: block;
+  will-change: transform;
+}
+
+.audioLabel {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.audioControl:hover .audioLabelRoll {
+  animation: audioLabelRollUp 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes audioLabelRollUp {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
 }
 
 .headerRow {
@@ -433,6 +495,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .audioControl:hover .audioLabelRoll {
+    animation: none;
+  }
+
   .viewLabelRoll {
     transition: none;
   }

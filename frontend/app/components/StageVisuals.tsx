@@ -317,7 +317,7 @@ export default function StageVisuals() {
       <h2 className="visually-hidden">Visuals</h2>
 
       <div
-        className={styles.viewport}
+        className={`content-stage ${styles.viewport}`}
         ref={viewportRef}
         role="group"
         aria-label="Stage and visuals gallery"
@@ -369,7 +369,7 @@ export default function StageVisuals() {
         </ul>
       </div>
 
-      <div className={styles.controls}>
+      <div className={`content-stage ${styles.controls}`}>
         <Pill
           label="prev"
           direction="prev"

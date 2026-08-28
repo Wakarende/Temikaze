@@ -20,6 +20,8 @@
    components) provide all the visual treatment; this wrapper exists purely to
    scope how long SectionHeader sticks. Booking joins it in Phase 9. */
 .contentRun {
+  --content-stage-shift: 0px;
+
   position: relative;
   /* The Music entry gap: the cream breathing room between the end of the Hero
      photograph and the top dotted rule of the Music boundary.
@@ -35,4 +37,14 @@
      bounded by its containing block's content box, and padding at the top of
      that box does not change where its bottom is. */
   padding-top: clamp(1.5rem, 4vw, 5rem);
+}
+
+/* Once the editorial header is sticky, the returning primary navigation adds
+   a second row of page chrome. Shift the shared header and each section's
+   visual stage by the same measured amount so they remain one rigid
+   composition. This is visual positioning only: no section height, pinned
+   stage geometry, or ScrollTrigger distance changes. */
+:global(html:not([data-nav-hidden="true"]))
+  .contentRun:has(> [data-section-header][data-stuck="true"]) {
+  --content-stage-shift: var(--primary-header-height, 0px);
 }
