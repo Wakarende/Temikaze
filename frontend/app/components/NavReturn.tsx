@@ -58,6 +58,7 @@ export default function NavReturn() {
       0;
 
     let hidden = false;
+    let overlayOpen = false;
     let lastScrollTop = getScrollTop();
 
     const publishHeight = () =>
@@ -74,6 +75,7 @@ export default function NavReturn() {
     };
 
     const evaluate = () => {
+      if (overlayOpen) return;
       const scrollTop = getScrollTop();
 
       // At the top the navigation is at its natural position and must always
@@ -97,6 +99,13 @@ export default function NavReturn() {
     publishHeight();
     evaluate();
 
+    const handleOverlay = (event: Event) => {
+      const detail = (event as CustomEvent<{ open: boolean }>).detail;
+      overlayOpen = detail.open;
+      lastScrollTop = getScrollTop();
+      if (overlayOpen) setHidden(false);
+    };
+
     const resizeObserver = new ResizeObserver(publishHeight);
     resizeObserver.observe(primary);
 
@@ -106,11 +115,13 @@ export default function NavReturn() {
       passive: true,
       capture: true,
     });
+    window.addEventListener("temikaze:artist-bio-overlay", handleOverlay);
     window.addEventListener("resize", evaluate);
 
     return () => {
       resizeObserver.disconnect();
       document.removeEventListener("scroll", evaluate, true);
+      window.removeEventListener("temikaze:artist-bio-overlay", handleOverlay);
       window.removeEventListener("resize", evaluate);
       root.removeAttribute("data-nav-hidden");
       root.style.removeProperty("--primary-header-height");

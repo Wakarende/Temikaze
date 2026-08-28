@@ -3,6 +3,7 @@
 import {
   type ComponentType,
   useEffect,
+  useId,
   useLayoutEffect,
   useRef,
 } from "react";
@@ -99,6 +100,7 @@ function LinkPill({
 function Signature() {
   const hasWritten = useRef(false);
   const holderRef = useRef<HTMLDivElement>(null);
+  const maskId = useId();
 
   // Driven through data attributes rather than React state: the reveal is
   // purely visual, so there is no reason to re-render for it, and it keeps the
@@ -151,7 +153,7 @@ function Signature() {
         aria-label="Temikaze"
       >
         <defs>
-          <mask id="temikaze-signature-mask" maskUnits="userSpaceOnUse">
+          <mask id={maskId} maskUnits="userSpaceOnUse">
             <path
               className={styles.maskPath}
               pathLength={1}
@@ -174,16 +176,23 @@ function Signature() {
           y="0"
           width="2172"
           height="724"
-          mask="url(#temikaze-signature-mask)"
+          mask={`url(#${maskId})`}
         />
       </svg>
     </div>
   );
 }
 
-export default function BookingContact() {
+export default function BookingContact({
+  sectionId = "booking",
+}: {
+  sectionId?: string | null;
+}) {
   return (
-    <section id="booking" className={styles.section}>
+    <section
+      {...(sectionId ? { id: sectionId } : {})}
+      className={styles.section}
+    >
       <div className={`container ${styles.inner}`}>
         <Signature />
         {/* The section's own heading. There is deliberately no separate

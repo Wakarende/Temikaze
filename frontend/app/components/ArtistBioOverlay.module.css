@@ -1,0 +1,187 @@
+.overlay {
+  position: fixed;
+  inset: var(--header-height) 0 0;
+  z-index: 40;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--background);
+  transform: rotate(90deg);
+  transform-origin: top left;
+  transition: transform 1050ms cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+}
+
+.overlay[data-state="open"] {
+  transform: rotate(0deg);
+}
+
+.overlay[data-state="closing"] {
+  transform: rotate(90deg);
+}
+
+.document {
+  min-height: 100%;
+  background: var(--background);
+}
+
+.bioSection {
+  padding-block: clamp(1rem, 2vw, 2rem) clamp(4rem, 8vw, 8rem);
+}
+
+.closeRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: clamp(2rem, 5vw, 5rem);
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1.4rem;
+  border: 1px solid var(--button-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  letter-spacing: var(--tracking-button);
+  line-height: 1.25;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+.labelMask {
+  display: block;
+  height: 1.25em;
+  overflow: hidden;
+}
+
+.labelRoll {
+  display: block;
+  will-change: transform;
+}
+
+.label {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.closeButton:hover .labelRoll {
+  animation: labelRollUp 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes labelRollUp {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.editorialGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+  align-items: start;
+  gap: clamp(3rem, 7vw, 8rem);
+}
+
+.imageColumn {
+  min-width: 0;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-h2);
+  line-height: var(--leading-h2);
+  letter-spacing: var(--tracking-h2);
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.rule {
+  width: 4rem;
+  height: 1px;
+  margin-block: clamp(1.5rem, 3vw, 2.5rem);
+  background: var(--foreground);
+}
+
+.copy {
+  max-width: 42rem;
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: var(--leading-body);
+  color: var(--foreground);
+}
+
+.copy p + p {
+  margin-top: 1.25em;
+}
+
+.copy p:first-child::first-letter {
+  float: left;
+  margin: 0.02em 0.09em 0 0;
+  font-family: var(--font-serif);
+  font-size: 5.2em;
+  font-weight: 600;
+  line-height: 0.72;
+}
+
+@media (max-width: 767px) {
+  .bioSection {
+    padding-bottom: 4rem;
+  }
+
+  .closeRow {
+    margin-bottom: 2rem;
+  }
+
+  .editorialGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .copyColumn {
+    display: contents;
+  }
+
+  .heading {
+    order: -2;
+  }
+
+  .rule {
+    order: -1;
+    margin-block: -0.5rem 0;
+  }
+
+  .imageColumn {
+    order: 0;
+  }
+
+  .copy {
+    order: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    transition: none;
+    transform: rotate(0deg);
+  }
+
+  .closeButton:hover .labelRoll {
+    animation: none;
+  }
+}

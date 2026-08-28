@@ -309,6 +309,17 @@ export default function Music() {
     [cancelCrossfade, stopVinylDust]
   );
 
+  useEffect(() => {
+    const stopForOverlay = (event: Event) => {
+      const detail = (event as CustomEvent<{ open: boolean }>).detail;
+      if (detail.open) crossfadeTo(-1);
+    };
+
+    window.addEventListener("temikaze:artist-bio-overlay", stopForOverlay);
+    return () =>
+      window.removeEventListener("temikaze:artist-bio-overlay", stopForOverlay);
+  }, [crossfadeTo]);
+
   useLayoutEffect(() => {
     const pinStage = pinStageRef.current;
     const wrapper = wrapperRef.current;
