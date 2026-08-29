@@ -1,0 +1,398 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--background-dark);
+  color: var(--foreground-light);
+  transform: translateX(100%);
+  transition: transform 760ms cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+}
+
+.overlay[data-state="open"] {
+  transform: translateX(0);
+}
+
+.overlay[data-state="closing"] {
+  transform: translateX(100%);
+}
+
+.menu {
+  height: 100dvh;
+  min-height: 0;
+  padding-inline: var(--page-gutter);
+  display: flex;
+  flex-direction: column;
+}
+
+.topRow {
+  position: relative;
+  min-height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.topRow::after {
+  content: "";
+  position: absolute;
+  inset-inline: calc(-1 * var(--page-gutter));
+  bottom: 0;
+  height: var(--dotted-rule-height);
+  background-image: radial-gradient(
+    circle at 1.5px 50%,
+    var(--foreground-light) 1.5px,
+    transparent 1.6px
+  );
+  background-repeat: repeat-x;
+  background-size: var(--dotted-rule-size);
+  pointer-events: none;
+}
+
+.wordmark,
+.closeButton {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--foreground-light);
+}
+
+.wordmark {
+  font-size: clamp(2rem, 9vw, 2.8rem);
+  letter-spacing: -0.04em;
+  text-transform: lowercase;
+}
+
+.closeButton {
+  border: 0;
+  background: transparent;
+  font-size: clamp(1.1rem, 5vw, 1.45rem);
+  cursor: pointer;
+}
+
+.closeButton:focus-visible,
+.wordmark:focus-visible,
+.navItem a:focus-visible,
+.statusCard:focus-visible,
+.utilityPill:focus-visible {
+  outline: 2px solid var(--focus-dark);
+  outline-offset: 4px;
+}
+
+.navigation {
+  margin-top: clamp(1.25rem, 5vh, 3rem);
+}
+
+.navList {
+  list-style: none;
+}
+
+.navItem {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.navItem a {
+  display: block;
+  padding-block: clamp(0.6rem, 1.8vh, 1rem);
+  font-family: var(--font-sans);
+  font-size: clamp(2.35rem, 10vw, 4rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  color: var(--foreground-light);
+}
+
+.statusList {
+  margin-top: clamp(1rem, 3.5vh, 2.25rem);
+  display: grid;
+  gap: clamp(0.6rem, 1.5vh, 1rem);
+}
+
+.statusCard {
+  min-height: clamp(4.8rem, 13vh, 6.25rem);
+  padding: clamp(0.75rem, 2vh, 1rem) 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  color: var(--foreground-light);
+}
+
+.cardEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-serif);
+  font-size: clamp(0.8rem, 3.2vw, 1rem);
+  font-style: var(--style-eyebrow);
+  color: var(--foreground-light-muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.dotRelease {
+  background: var(--status-dot-red);
+}
+
+.dotMix {
+  background: var(--status-dot-blue);
+}
+
+.cardTitle {
+  font-family: var(--font-sans);
+  font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.utilityLinks {
+  margin-top: auto;
+  padding-block: clamp(1rem, 3vh, 2rem) clamp(0.75rem, 2vh, 1.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.5fr);
+  gap: 0.5rem;
+}
+
+.utilityPill {
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--foreground-light-muted);
+  border-radius: 999px;
+  color: var(--foreground-light-muted);
+  font-family: var(--font-sans);
+  font-size: clamp(0.68rem, 2.7vw, 0.9rem);
+  overflow-wrap: anywhere;
+}
+
+.utilityIcon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(0.9rem);
+}
+
+.overlay[data-state="open"] .reveal {
+  animation: fadeThenSettle 560ms cubic-bezier(0.22, 1, 0.36, 1)
+    var(--menu-delay, 400ms) both;
+}
+
+.overlay[data-state="closing"] .reveal {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.overlay[data-state="closing"] .topRow .reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition: none;
+}
+
+@keyframes fadeThenSettle {
+  0% {
+    opacity: 0;
+    transform: translateY(0.9rem);
+  }
+  42% {
+    opacity: 1;
+    transform: translateY(0.9rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.labelMask {
+  display: block;
+  height: 1.25em;
+  overflow: hidden;
+}
+
+.labelRoll {
+  display: block;
+  will-change: transform;
+}
+
+.label {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+}
+
+.rollToggle {
+  animation: rollToggle 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.closeButton[data-closing="false"] .rollToggle,
+.closeButton[data-closing="false"].pressA,
+.closeButton[data-closing="false"].pressB {
+  animation-delay: 620ms;
+}
+
+@keyframes rollToggle {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.pressA {
+  animation: pressA 340ms ease-out both;
+}
+
+.pressB {
+  animation: pressB 340ms ease-out both;
+}
+
+@keyframes pressA {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 0.86);
+  }
+  58% {
+    transform: scale(1.02, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes pressB {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 0.86);
+  }
+  58% {
+    transform: scale(1.02, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@media (max-height: 520px) {
+  .navigation {
+    margin-top: 0.5rem;
+  }
+
+  .navItem a {
+    padding-block: 0.4rem;
+    font-size: clamp(2rem, 9vw, 2.4rem);
+  }
+
+  .statusList {
+    margin-top: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .statusCard {
+    min-height: 4rem;
+    padding: 0.65rem 0.8rem;
+    gap: 0.3rem;
+  }
+
+  .utilityLinks {
+    padding-block: 0.5rem;
+  }
+}
+
+@media (max-width: 767px) and (max-height: 620px) and (orientation: landscape) {
+  .menu {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: 1.5rem;
+  }
+
+  .topRow {
+    grid-column: 1 / -1;
+  }
+
+  .navigation {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: center;
+    margin-top: 0.75rem;
+  }
+
+  .navItem a {
+    padding-block: 0.4rem;
+    font-size: clamp(2rem, 10vh, 2.75rem);
+  }
+
+  .statusList {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+    margin-top: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .statusCard {
+    min-height: 4.25rem;
+    padding: 0.6rem 0.8rem;
+    gap: 0.25rem;
+  }
+
+  .utilityLinks {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 0;
+    padding-block: 0.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .overlay {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .reveal,
+  .pressA,
+  .pressB,
+  .rollToggle {
+    animation: none;
+    transition: none;
+  }
+
+  .overlay,
+  .overlay[data-state="open"] {
+    transform: translateX(0);
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .labelRoll {
+    transform: translateY(-50%);
+  }
+}

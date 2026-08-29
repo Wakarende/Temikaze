@@ -111,10 +111,8 @@
     --text-eyebrow: 0.8rem;
     --text-button: 0.8rem;
     --section-spacing: clamp(3rem, 6vw, 5rem);
-    /* Header.module.css wraps into wordmark / nav / CTA rows below 768px,
-       so it's taller than the 70px desktop target — scroll-padding-top
-       needs the real height or anchor jumps clip the section heading. */
-    --header-height: 140px;
+    /* Mobile navigation collapses into one compact wordmark/menu row. */
+    --header-height: 70px;
   }
 }
 

@@ -155,7 +155,7 @@
    band short and avoids any chance of the two sides colliding. */
 @media (max-width: 767px) {
   .header {
-    --section-header-content-h: clamp(2rem, 9vw, 2.5rem);
+    --section-header-content-h: clamp(2.75rem, 12vw, 3.5rem);
   }
 
   .inner {
@@ -163,7 +163,7 @@
   }
 
   .title {
-    font-size: clamp(2rem, 10vw, 2.5rem);
+    font-size: clamp(2.75rem, 12vw, 3.5rem);
   }
 
   .descriptorMask {

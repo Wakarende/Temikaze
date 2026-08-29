@@ -156,7 +156,7 @@ export default function ArtistBioOverlay({
                 alt="Temikaze smiling behind a DJ mixer with one arm raised under purple and blue lighting."
                 width={1086}
                 height={1448}
-                sizes="(max-width: 767px) calc(100vw - 2.5rem), 46vw"
+                sizes="(max-width: 767px) 100vw, 46vw"
                 className={styles.image}
               />
             </div>

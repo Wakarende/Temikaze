@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
 import styles from "./StageVisuals.module.css";
@@ -108,9 +108,6 @@ export default function StageVisuals() {
   // fractional targets (0 -> 1.5 -> 2.1), so no item ever landed centred and
   // activeIndex stopped matching any real item.
   const targetIndex = useRef(0);
-  // True below the mobile breakpoint, where the spec calls for one primary
-  // image rather than the desktop flanking composition.
-  const singleImage = useRef(false);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
 
   // Mirrors `position` for the parts of the UI that re-render (aria-current).
@@ -173,13 +170,7 @@ export default function StageVisuals() {
           : Math.sign(d) * (firstStep + (dist - 1) * outerStep);
 
       const scale = lerp(1, INACTIVE_SCALE, t);
-      // Below the mobile breakpoint only the active image is shown, so the
-      // flanking slots fade to nothing instead of settling at 0.4. During a
-      // navigation tween that reads as a crossfade between two images rather
-      // than a row sliding past.
-      const opacity = singleImage.current
-        ? Math.max(0, 1 - dist)
-        : lerp(1, INACTIVE_OPACITY, t);
+      const opacity = lerp(1, INACTIVE_OPACITY, t);
       const grayscale = lerp(0, INACTIVE_GRAYSCALE, t);
 
       el.style.transform =
@@ -214,20 +205,6 @@ export default function StageVisuals() {
     const observer = new ResizeObserver(measure);
     observer.observe(probe);
     return () => observer.disconnect();
-  }, [render]);
-
-  // Keeps the single-image mobile flag in sync with the breakpoint the
-  // stylesheet uses, so render() and the CSS never disagree about which
-  // composition is active.
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 767px)");
-    const sync = () => {
-      singleImage.current = query.matches;
-      render();
-    };
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
   }, [render]);
 
   // -------------------------------------------------------------------------

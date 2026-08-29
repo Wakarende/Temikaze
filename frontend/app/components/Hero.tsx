@@ -3,23 +3,9 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import ArtistBioOverlay from "./ArtistBioOverlay";
+import { HERO_STATUS_CARDS } from "./heroStatusData";
 import styles from "./Hero.module.css";
 import { navigateToSection } from "./siteNavigation";
-
-const STATUS_CARDS = [
-  {
-    href: "#music",
-    eyebrow: "Latest Release",
-    title: "Nia",
-    dot: styles.dotRelease,
-  },
-  {
-    href: "#music",
-    eyebrow: "Latest Mix",
-    title: "Mum's Garage Radio",
-    dot: styles.dotMix,
-  },
-];
 
 export default function Hero() {
   const [bioMounted, setBioMounted] = useState(false);
@@ -74,11 +60,15 @@ export default function Hero() {
           </div>
 
           <div className={styles.cardStack}>
-            {STATUS_CARDS.map((card) => (
+            {HERO_STATUS_CARDS.map((card) => (
               <a key={card.eyebrow} href={card.href} className={styles.card}>
                 <span className={styles.cardEyebrow}>
                   <span
-                    className={`${styles.dot} ${card.dot}`}
+                    className={`${styles.dot} ${
+                      card.tone === "release"
+                        ? styles.dotRelease
+                        : styles.dotMix
+                    }`}
                     aria-hidden="true"
                   />
                   {card.eyebrow}

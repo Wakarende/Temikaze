@@ -144,7 +144,11 @@
   }
 
   .closeRow {
-    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+    min-height: 2.75rem;
+    margin-bottom: clamp(0.75rem, 3vw, 1.25rem);
+    flex: 0 0 auto;
   }
 
   .editorialGrid {
@@ -159,6 +163,10 @@
 
   .heading {
     order: -2;
+    width: 100%;
+    font-size: clamp(3.6rem, 18vw, 6rem);
+    line-height: 0.88;
+    text-align: center;
   }
 
   .rule {
@@ -168,6 +176,9 @@
 
   .imageColumn {
     order: 0;
+    width: calc(100% + (2 * var(--page-gutter)));
+    max-width: none;
+    margin-inline: calc(-1 * var(--page-gutter));
   }
 
   .copy {

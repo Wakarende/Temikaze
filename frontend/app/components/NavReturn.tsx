@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { RETURN_HOME_EVENT } from "./siteNavigation";
 
 /**
  * Scroll-direction visibility for the primary navigation.
@@ -106,6 +107,16 @@ export default function NavReturn() {
       if (overlayOpen) setHidden(false);
     };
 
+    // The wordmark is a true "home" control, not an ordinary section jump.
+    // Its navigation helper scrolls to the absolute top and then emits this
+    // event so the direction tracker resets in the same lifecycle. Without
+    // this explicit synchronization, a programmatic layout correction could
+    // be misread as downward user scrolling and hide the navigation again.
+    const handleReturnHome = () => {
+      lastScrollTop = 0;
+      setHidden(false);
+    };
+
     const resizeObserver = new ResizeObserver(publishHeight);
     resizeObserver.observe(primary);
 
@@ -116,12 +127,14 @@ export default function NavReturn() {
       capture: true,
     });
     window.addEventListener("temikaze:artist-bio-overlay", handleOverlay);
+    window.addEventListener(RETURN_HOME_EVENT, handleReturnHome);
     window.addEventListener("resize", evaluate);
 
     return () => {
       resizeObserver.disconnect();
       document.removeEventListener("scroll", evaluate, true);
       window.removeEventListener("temikaze:artist-bio-overlay", handleOverlay);
+      window.removeEventListener(RETURN_HOME_EVENT, handleReturnHome);
       window.removeEventListener("resize", evaluate);
       root.removeAttribute("data-nav-hidden");
       root.style.removeProperty("--primary-header-height");

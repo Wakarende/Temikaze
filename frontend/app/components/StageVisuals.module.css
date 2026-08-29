@@ -253,14 +253,20 @@
   }
 }
 
-/* Mobile: one primary image. No mobile reference material exists (both
-   recordings and all screenshots are desktop), so this follows the written
-   spec in MASTER_SPEC Section 13. The flanking slots fade to nothing in
-   render(), which also removes them from the tab order. */
+/* Mobile keeps one dominant primary image while allowing the immediate muted
+   neighbours to remain visible at the viewport edges. The same render geometry
+   and accepted active/inactive treatment drive every breakpoint; these values
+   only resize the shared image boxes for the narrower composition. */
 @media (max-width: 767px) {
   .section {
-    --gallery-box-w: min(80vw, 320px);
-    --gallery-box-h: min(70vw, 380px);
+    --gallery-box-w: min(66vw, 320px);
+    --gallery-box-h: min(72vw, 380px);
+    /* The returning primary navigation and shared VISUALS header stack above
+       this normal-flow gallery. Unlike Music's pinned stage, the gallery must
+       not follow that chrome offset: doing so moves its image and prev/next
+       controls when the navigation appears. Reset only this section's stage
+       shift while leaving the shared header and Music behaviour untouched. */
+    --content-stage-shift: 0px;
   }
 
   .viewport {

@@ -40,10 +40,10 @@
 }
 
 /* Once the editorial header is sticky, the returning primary navigation adds
-   a second row of page chrome. Shift the shared header and each section's
-   visual stage by the same measured amount so they remain one rigid
-   composition. This is visual positioning only: no section height, pinned
-   stage geometry, or ScrollTrigger distance changes. */
+   a second row of page chrome. Shift the shared header and any section stage
+   that participates in the stacked-header composition by the same measured
+   amount. Individual mobile sections may opt their normal-flow stage out when
+   moving it would disturb an accepted interaction. */
 :global(html:not([data-nav-hidden="true"]))
   .contentRun:has(> [data-section-header][data-stuck="true"]) {
   --content-stage-shift: var(--primary-header-height, 0px);

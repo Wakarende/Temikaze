@@ -110,27 +110,103 @@
   transform: scaleX(1);
 }
 
+.mobileMenuButton {
+  display: none;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--text-button);
+  font-weight: var(--weight-button);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.labelMask {
+  display: block;
+  height: 1.25em;
+  overflow: hidden;
+}
+
+.labelRoll {
+  display: block;
+  will-change: transform;
+}
+
+.label {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25;
+}
+
+.rollToggle {
+  animation: rollToggle 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rollToggle {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.pressA {
+  animation: pressA 340ms ease-out both;
+}
+
+.pressB {
+  animation: pressB 340ms ease-out both;
+}
+
+@keyframes pressA {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 0.86);
+  }
+  58% {
+    transform: scale(1.02, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes pressB {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(0.94, 0.86);
+  }
+  58% {
+    transform: scale(1.02, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
 @media (max-width: 767px) {
   .inner {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: space-between;
   }
 
   .wordmark {
-    font-size: 1.15rem;
+    font-size: 1.4rem;
   }
 
   .nav {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    width: 100%;
+    display: none;
   }
 
-  .navList {
-    flex-wrap: wrap;
-    gap: 1rem;
-    width: 100%;
+  .mobileMenuButton {
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -143,5 +219,11 @@
      decoration — it simply arrives and leaves without the slide. */
   .header {
     transition: none;
+  }
+
+  .pressA,
+  .pressB,
+  .rollToggle {
+    animation: none;
   }
 }
