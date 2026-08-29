@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import ArtistBioOverlay from "./ArtistBioOverlay";
 import styles from "./Hero.module.css";
+import { navigateToSection } from "./siteNavigation";
 
 const STATUS_CARDS = [
   {
@@ -24,9 +25,12 @@ export default function Hero() {
   const [bioMounted, setBioMounted] = useState(false);
   const bioButtonRef = useRef<HTMLButtonElement>(null);
 
-  const closeBio = () => {
+  const closeBio = (navigationTarget?: string) => {
     setBioMounted(false);
-    requestAnimationFrame(() => bioButtonRef.current?.focus());
+    requestAnimationFrame(() => {
+      if (navigationTarget) navigateToSection(navigationTarget);
+      else bioButtonRef.current?.focus();
+    });
   };
 
   return (

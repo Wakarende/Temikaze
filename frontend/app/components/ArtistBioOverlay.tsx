@@ -11,6 +11,10 @@ import {
 import { createPortal } from "react-dom";
 import BookingContact from "./BookingContact";
 import styles from "./ArtistBioOverlay.module.css";
+import {
+  ARTIST_BIO_NAVIGATION_EVENT,
+  type ArtistBioNavigationDetail,
+} from "./siteNavigation";
 
 const BIO_PARAGRAPHS = [
   "I’m Temikaze, a Nairobi-based DJ, producer and music educator.",
@@ -26,17 +30,18 @@ const OVERLAY_EVENT = "temikaze:artist-bio-overlay";
 export default function ArtistBioOverlay({
   onClosed,
 }: {
-  onClosed: () => void;
+  onClosed: (navigationTarget?: string) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const closingRef = useRef(false);
+  const navigationTargetRef = useRef<string | undefined>(undefined);
 
   const finishClose = useCallback(() => {
     window.dispatchEvent(
       new CustomEvent(OVERLAY_EVENT, { detail: { open: false } })
     );
-    onClosed();
+    onClosed(navigationTargetRef.current);
   }, [onClosed]);
 
   const close = useCallback(() => {
@@ -82,10 +87,21 @@ export default function ArtistBioOverlay({
       if (event.key === "Escape") close();
     };
 
+    const handleNavigation = (event: Event) => {
+      const detail = (event as CustomEvent<ArtistBioNavigationDetail>).detail;
+      navigationTargetRef.current = detail.href;
+      close();
+    };
+
     document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener(ARTIST_BIO_NAVIGATION_EVENT, handleNavigation);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener(
+        ARTIST_BIO_NAVIGATION_EVENT,
+        handleNavigation
+      );
       if (main instanceof HTMLElement) main.inert = false;
       delete root.dataset.artistBioOpen;
       root.style.overflow = savedOverflow;
