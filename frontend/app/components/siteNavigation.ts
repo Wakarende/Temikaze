@@ -1,9 +1,14 @@
 export const ARTIST_BIO_NAVIGATION_EVENT =
   "temikaze:artist-bio-navigation";
 export const RETURN_HOME_EVENT = "temikaze:return-home";
+export const MUSIC_ITEM_NAVIGATION_EVENT = "temikaze:music-item-navigation";
 
 export type ArtistBioNavigationDetail = {
   href: string;
+};
+
+export type MusicItemNavigationDetail = {
+  itemId: string;
 };
 
 const getScrollTop = () =>
@@ -36,4 +41,13 @@ export const navigateToSection = (href: string) => {
 
   window.history.pushState(null, "", href);
   window.scrollTo({ top: Math.max(0, targetTop - offset), behavior: "auto" });
+};
+
+export const navigateToMusicItem = (itemId: string) => {
+  window.history.pushState(null, "", "#music");
+  window.dispatchEvent(
+    new CustomEvent<MusicItemNavigationDetail>(MUSIC_ITEM_NAVIGATION_EVENT, {
+      detail: { itemId },
+    })
+  );
 };

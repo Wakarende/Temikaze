@@ -11,6 +11,10 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MUSIC_ITEMS } from "./musicData";
+import {
+  MUSIC_ITEM_NAVIGATION_EVENT,
+  type MusicItemNavigationDetail,
+} from "./siteNavigation";
 import styles from "./Music.module.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -343,6 +347,11 @@ export default function Music() {
       return;
     }
 
+    const getRequestedIndex = (event: Event) => {
+      const { itemId } = (event as CustomEvent<MusicItemNavigationDetail>).detail;
+      return MUSIC_ITEMS.findIndex((item) => item.id === itemId);
+    };
+
     // Desktop writes transforms/opacity directly for every scrub frame. Those
     // values must not survive a breakpoint or reduced-motion change and leak
     // into the normal vertical fallback.
@@ -392,6 +401,19 @@ export default function Music() {
         if (reducedMotion) {
           resetToDocumentFlow();
           publishActiveAudioIndex(0);
+          const handleItemNavigation = (event: Event) => {
+            const index = getRequestedIndex(event);
+            if (index < 0) return;
+
+            cards.forEach((card, cardIndex) => {
+              card.setAttribute(
+                "data-active",
+                cardIndex === index ? "true" : "false"
+              );
+            });
+            publishActiveAudioIndex(index);
+            cards[index].scrollIntoView({ block: "center", behavior: "auto" });
+          };
           const observer = new IntersectionObserver(
             ([entry]) => {
               musicActiveRef.current = entry.isIntersecting;
@@ -400,7 +422,15 @@ export default function Music() {
             { threshold: 0.1 }
           );
           observer.observe(pinStage);
+          window.addEventListener(
+            MUSIC_ITEM_NAVIGATION_EVENT,
+            handleItemNavigation
+          );
           return () => {
+            window.removeEventListener(
+              MUSIC_ITEM_NAVIGATION_EVENT,
+              handleItemNavigation
+            );
             observer.disconnect();
             musicActiveRef.current = false;
             syncAudioPlayback();
@@ -778,10 +808,38 @@ export default function Music() {
           }
         );
 
+        const handleItemNavigation = (event: Event) => {
+          const index = getRequestedIndex(event);
+          const motionTrigger = tween.scrollTrigger;
+          if (index < 0 || !motionTrigger) return;
+
+          buildCardGeometry();
+          const targetTrackX = -(cardCenters[index] - cardCenters[0]);
+          const targetProgress = gsap.utils.clamp(
+            0,
+            1,
+            (getEntryStartRoll() - targetTrackX) / getTotalDistance()
+          );
+          const targetScroll =
+            motionTrigger.start +
+            targetProgress * (motionTrigger.end - motionTrigger.start);
+
+          window.scrollTo({ top: targetScroll, behavior: "auto" });
+        };
+
+        window.addEventListener(
+          MUSIC_ITEM_NAVIGATION_EVENT,
+          handleItemNavigation
+        );
+
         updateCardEmphasis();
         updateRulerTicks(0);
 
         return () => {
+          window.removeEventListener(
+            MUSIC_ITEM_NAVIGATION_EVENT,
+            handleItemNavigation
+          );
           musicActiveRef.current = false;
           syncAudioPlayback();
           tween.scrollTrigger?.kill();
@@ -861,7 +919,12 @@ export default function Music() {
                     <h3 className={styles.title}>{item.title}</h3>
                     <p className={styles.year}>({item.year})</p>
                   </div>
-                  <button type="button" className={styles.viewControl}>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.viewControl}
+                  >
                     <span className={styles.viewLabelMask}>
                       <span className={styles.viewLabelRoll}>
                         <span className={styles.viewLabel}>{viewLabel}</span>
@@ -870,7 +933,7 @@ export default function Music() {
                         </span>
                       </span>
                     </span>
-                  </button>
+                  </a>
                 </li>
               );
             })}

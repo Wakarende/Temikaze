@@ -5,6 +5,7 @@ export type MusicItem = {
   type: "release" | "mix";
   artwork: string;
   preview: string;
+  url: string;
 };
 
 // Local static data for Phase 6. Replaced by WordPress REST data in Phase 10 —
@@ -17,6 +18,7 @@ const MUSIC_ITEMS_SOURCE: MusicItem[] = [
     type: "release",
     artwork: "/images/music/nia.webp",
     preview: "/audio/previews/nia-preview.mp3",
+    url: "https://open.spotify.com/track/30B5p9WgtGmasWgisd7BGf?si=ddc9fdcc6b974c75"
   },
   {
     id: "let-go",
@@ -25,6 +27,7 @@ const MUSIC_ITEMS_SOURCE: MusicItem[] = [
     type: "release",
     artwork: "/images/music/let-go.webp",
     preview: "/audio/previews/let-go-preview.mp3",
+    url:"https://open.spotify.com/track/6CGkYKWeTwDG0dP2irkYWM?si=618877c3f5c84ae5"
   },
   {
     id: "gone",
@@ -33,6 +36,7 @@ const MUSIC_ITEMS_SOURCE: MusicItem[] = [
     type: "release",
     artwork: "/images/music/gone.webp",
     preview: "/audio/previews/gone-preview.mp3",
+    url: "https://open.spotify.com/track/71lajfMt6lAYgFwOtBNgt9?si=dc56a0d610014e83"
   },
   {
     id: "mums-garage-radio",
@@ -41,6 +45,7 @@ const MUSIC_ITEMS_SOURCE: MusicItem[] = [
     type: "mix",
     artwork: "/images/music/mums-garage-radio.jpg",
     preview: "/audio/previews/moms-garage-01-preview.mp3",
+    url: "https://youtu.be/73_S0029lsw?si=bVJQG8XijmtiEAFl"
   },
 ];
 

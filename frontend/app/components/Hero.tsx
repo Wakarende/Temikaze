@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import ArtistBioOverlay from "./ArtistBioOverlay";
 import { HERO_STATUS_CARDS } from "./heroStatusData";
 import styles from "./Hero.module.css";
-import { navigateToSection } from "./siteNavigation";
+import { navigateToMusicItem, navigateToSection } from "./siteNavigation";
 
 export default function Hero() {
   const [bioMounted, setBioMounted] = useState(false);
@@ -61,7 +61,15 @@ export default function Hero() {
 
           <div className={styles.cardStack}>
             {HERO_STATUS_CARDS.map((card) => (
-              <a key={card.eyebrow} href={card.href} className={styles.card}>
+              <a
+                key={card.eyebrow}
+                href={card.href}
+                className={styles.card}
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigateToMusicItem(card.musicItemId);
+                }}
+              >
                 <span className={styles.cardEyebrow}>
                   <span
                     className={`${styles.dot} ${

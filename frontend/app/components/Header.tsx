@@ -5,6 +5,7 @@ import styles from "./Header.module.css";
 import MobileMenu from "./MobileMenu";
 import {
   ARTIST_BIO_NAVIGATION_EVENT,
+  navigateToMusicItem,
   navigateToSection,
 } from "./siteNavigation";
 
@@ -42,10 +43,14 @@ export default function Header() {
     setMenuMounted(true);
   };
 
-  const finishMenuClose = (navigationTarget?: string) => {
+  const finishMenuClose = (
+    navigationTarget?: string,
+    musicItemId?: string
+  ) => {
     setMenuMounted(false);
     requestAnimationFrame(() => {
-      if (navigationTarget) navigateToHref(navigationTarget);
+      if (musicItemId) navigateToMusicItem(musicItemId);
+      else if (navigationTarget) navigateToHref(navigationTarget);
       else menuButtonRef.current?.focus();
     });
   };

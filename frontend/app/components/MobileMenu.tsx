@@ -28,25 +28,27 @@ const revealDelay = (delay: number) =>
 export default function MobileMenu({
   onClosed,
 }: {
-  onClosed: (navigationTarget?: string) => void;
+  onClosed: (navigationTarget?: string, musicItemId?: string) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const closingRef = useRef(false);
   const navigationTargetRef = useRef<string | undefined>(undefined);
+  const musicItemTargetRef = useRef<string | undefined>(undefined);
   const [closing, setClosing] = useState(false);
   const [togglePress, setTogglePress] = useState(1);
 
   const finishClose = useCallback(() => {
-    onClosed(navigationTargetRef.current);
+    onClosed(navigationTargetRef.current, musicItemTargetRef.current);
   }, [onClosed]);
 
   const close = useCallback(
-    (navigationTarget?: string) => {
+    (navigationTarget?: string, musicItemId?: string) => {
       const panel = panelRef.current;
       if (!panel || closingRef.current) return;
 
       navigationTargetRef.current = navigationTarget;
+      musicItemTargetRef.current = musicItemId;
       closingRef.current = true;
       setClosing(true);
       setTogglePress((press) => press + 1);
@@ -223,7 +225,10 @@ export default function MobileMenu({
               href={card.href}
               className={`${styles.statusCard} ${styles.reveal}`}
               style={revealDelay(760 + index * 100)}
-              onClick={(event) => navigate(event, card.href)}
+              onClick={(event) => {
+                event.preventDefault();
+                close(card.href, card.musicItemId);
+              }}
             >
               <span className={styles.cardEyebrow}>
                 <span
