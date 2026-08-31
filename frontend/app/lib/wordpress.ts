@@ -216,7 +216,21 @@ const resolveAudioUrl = (
     throw new Error(`WordPress media ${id} referenced by ${field} is not audio.`);
   }
 
-  return requireUrl(media.source_url, `media.${id}.source_url`);
+  const source = new URL(requireUrl(media.source_url, `media.${id}.source_url`));
+  const wordpressOrigin = new URL(getWordPressBaseUrl()).origin;
+  const uploadsPath = "/wp-content/uploads/";
+  if (
+    source.origin !== wordpressOrigin ||
+    !source.pathname.startsWith(uploadsPath) ||
+    source.username ||
+    source.password ||
+    source.search ||
+    source.hash
+  ) {
+    throw new Error(`WordPress audio ${id} must use the configured CMS uploads origin.`);
+  }
+
+  return `/cms-audio/${source.pathname.slice(uploadsPath.length)}`;
 };
 
 const normalizeMusicItem = (
