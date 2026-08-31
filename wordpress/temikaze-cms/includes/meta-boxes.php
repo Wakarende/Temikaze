@@ -63,7 +63,12 @@ function temikaze_cms_render_meta_box( $post ) {
 				break;
 
 			case 'attachment':
-				temikaze_cms_render_attachment_field( $input_id, $name, $value );
+				temikaze_cms_render_attachment_field(
+					$input_id,
+					$name,
+					$value,
+					isset( $field['media_type'] ) ? $field['media_type'] : 'image'
+				);
 				break;
 
 			case 'email':
@@ -84,23 +89,44 @@ function temikaze_cms_render_meta_box( $post ) {
 }
 
 /**
- * Renders the native media-library picker used for the TG & fRenz logo field.
+ * Renders a native media-library attachment picker.
  *
  * @param string $input_id  HTML id for the hidden ID input.
  * @param string $name      HTML name for the hidden ID input.
  * @param string $attachment_id Currently stored attachment ID, if any.
+ * @param string $media_type Intended media type: image or audio.
  */
-function temikaze_cms_render_attachment_field( $input_id, $name, $attachment_id ) {
-	$preview_url = $attachment_id ? wp_get_attachment_image_url( (int) $attachment_id, 'thumbnail' ) : '';
+function temikaze_cms_render_attachment_field( $input_id, $name, $attachment_id, $media_type ) {
+	$media_type    = in_array( $media_type, array( 'image', 'audio' ), true ) ? $media_type : 'image';
+	$attachment_id = absint( $attachment_id );
+	$attachment    = $attachment_id ? get_post( $attachment_id ) : null;
+	$media_label   = 'audio' === $media_type ? 'Audio' : 'Image';
 
-	echo '<div class="temikaze-cms-attachment-field">';
+	echo '<div class="temikaze-cms-attachment-field" data-media-type="' . esc_attr( $media_type ) . '">';
 	echo '<input type="hidden" id="' . esc_attr( $input_id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( $attachment_id ) . '" />';
 	echo '<div class="temikaze-cms-attachment-preview" style="margin-bottom:8px;">';
-	if ( $preview_url ) {
-		echo '<img src="' . esc_url( $preview_url ) . '" style="max-width:150px;height:auto;display:block;" />';
+	if ( $attachment ) {
+		if ( 'audio' === $media_type ) {
+			$audio_url = wp_get_attachment_url( $attachment_id );
+			$audio_path = $audio_url ? wp_parse_url( $audio_url, PHP_URL_PATH ) : '';
+			$filename   = is_string( $audio_path ) ? wp_basename( $audio_path ) : '';
+
+			echo '<strong style="display:block;margin-bottom:4px;">' . esc_html( get_the_title( $attachment_id ) ) . '</strong>';
+			if ( $filename ) {
+				echo '<span style="display:block;margin-bottom:6px;">' . esc_html( $filename ) . '</span>';
+			}
+			if ( $audio_url ) {
+				echo '<audio controls preload="metadata" src="' . esc_url( $audio_url ) . '" style="display:block;max-width:100%;"></audio>';
+			}
+		} else {
+			$preview_url = wp_get_attachment_image_url( $attachment_id, 'thumbnail' );
+			if ( $preview_url ) {
+				echo '<img src="' . esc_url( $preview_url ) . '" alt="" style="max-width:150px;height:auto;display:block;" />';
+			}
+		}
 	}
 	echo '</div>';
-	echo '<button type="button" class="button temikaze-cms-select-attachment" data-target="' . esc_attr( $input_id ) . '">Select Image</button> ';
+	echo '<button type="button" class="button temikaze-cms-select-attachment" data-target="' . esc_attr( $input_id ) . '" data-media-type="' . esc_attr( $media_type ) . '">Select ' . esc_html( $media_label ) . '</button> ';
 	echo '<button type="button" class="button temikaze-cms-remove-attachment" data-target="' . esc_attr( $input_id ) . '">Remove</button>';
 	echo '</div>';
 }
@@ -145,14 +171,44 @@ function temikaze_cms_enqueue_media_picker( $hook ) {
 			e.preventDefault();
 			var button = $( this );
 			var targetId = button.data( 'target' );
-			var frame = wp.media( { title: 'Select Image', multiple: false } );
+			var mediaType = button.data( 'media-type' ) === 'audio' ? 'audio' : 'image';
+			var mediaLabel = mediaType === 'audio' ? 'Audio' : 'Image';
+			var frame = wp.media( {
+				title: 'Select ' + mediaLabel,
+				button: { text: 'Use ' + mediaLabel },
+				library: { type: mediaType },
+				multiple: false
+			} );
 
 			frame.on( 'select', function () {
 				var attachment = frame.state().get( 'selection' ).first().toJSON();
 				$( '#' + targetId ).val( attachment.id );
 				var preview = button.closest( '.temikaze-cms-attachment-field' ).find( '.temikaze-cms-attachment-preview' );
+				preview.empty();
+
+				if ( mediaType === 'audio' ) {
+					$( '<strong>' )
+						.text( attachment.title || attachment.filename || 'Selected audio' )
+						.css( { display: 'block', marginBottom: '4px' } )
+						.appendTo( preview );
+					if ( attachment.filename ) {
+						$( '<span>' )
+							.text( attachment.filename )
+							.css( { display: 'block', marginBottom: '6px' } )
+							.appendTo( preview );
+					}
+					$( '<audio>' )
+						.attr( { controls: '', preload: 'metadata', src: attachment.url } )
+						.css( { display: 'block', maxWidth: '100%' } )
+						.appendTo( preview );
+					return;
+				}
+
 				var thumb = attachment.sizes && attachment.sizes.thumbnail ? attachment.sizes.thumbnail.url : attachment.url;
-				preview.html( '<img src="' + thumb + '" style="max-width:150px;height:auto;display:block;" />' );
+				$( '<img>' )
+					.attr( { src: thumb, alt: '' } )
+					.css( { maxWidth: '150px', height: 'auto', display: 'block' } )
+					.appendTo( preview );
 			} );
 
 			frame.open();

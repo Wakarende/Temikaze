@@ -1055,3 +1055,19 @@ Deferred, none of it blocking Phase 9: the Stage & Visuals oversized entrance if
 Artist bio: location and structure still TBD, pending user direction. Do not build, relocate, placeholder, or invent it.
 
 Reference evidence housekeeping: the three VISUAL entrance screenshots still live only in the user's Pictures\Screenshots folder and should be copied into references/screenshots/ if the entrance is revisited.
+
+WordPress integration Step 5 — frontend REST connection (2026-08-30)
+
+Status: Implemented; manual visual and interaction acceptance pending.
+
+The homepage now fetches the published Artist Profile, Releases, Mixes, Gallery, and required media attachments from the standard WordPress REST API on the server. A small typed normalizer validates required CMS fields, resolves image/audio attachments, decodes rendered titles and biography paragraphs, merges Releases and Mixes by their actual dates, and throws explicit CMS errors instead of falling back to stale production content.
+
+CMS content now drives the Hero title/tagline/image and latest cards, Artist Bio copy and separate image, Booking and Mobile Menu destinations, Music cards/audio/external links, and the six Gallery items in `menu_order`. Existing client components retain their accepted animation, audio, sticky, navigation, and responsive logic; only their data inputs changed. The local Vinyl Dust SFX remains a frontend asset.
+
+Environment/configuration: server-only `WORDPRESS_URL` is documented in `.env.example`; local `.env.local` points to Studio at `http://localhost:8881` and remains ignored. Next Image permits only WordPress upload paths on local Studio and future `cms.temikaze.com`; private-IP image optimization is enabled only when the configured WordPress hostname is `localhost`.
+
+Static `musicData.ts`, `galleryData.ts`, `contactData.ts`, and `heroStatusData.ts` are now unused but intentionally retained until manual verification approves their removal.
+
+Checks run: `npx tsc --noEmit` passed; `npm run lint` passed; `npm run build` passed. A fresh production server returned HTTP 200 with the WordPress Hero, biography, four Music items and external destinations, six ordered Gallery images/native alt text, and CMS contact links present. All four preview-audio URLs returned HTTP 200, and the Next Image optimizer returned HTTP 200 for the WordPress Hero image.
+
+Remaining verification: no controllable browser was connected in this session, so the accepted GSAP choreography, overlay motion/focus restoration, audio switching/crossfade/SFX, Music external pills, Gallery controls/swipe, responsive layouts, and all final visual fidelity must be checked manually in the browser before Step 5 is accepted.

@@ -40,7 +40,7 @@ function temikaze_cms_register_post_types() {
 		'artist_profile' => array(
 			'singular' => 'Artist Profile',
 			'plural'   => 'Artist Profile',
-			'supports' => array( 'title', 'thumbnail', 'custom-fields' ),
+			'supports' => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
 			'icon'     => 'dashicons-admin-users',
 		),
 		'releases'        => array(
@@ -64,7 +64,7 @@ function temikaze_cms_register_post_types() {
 		'gallery'         => array(
 			'singular' => 'Gallery Image',
 			'plural'   => 'Gallery',
-			'supports' => array( 'title', 'excerpt', 'thumbnail', 'custom-fields' ),
+			'supports' => array( 'title', 'excerpt', 'thumbnail', 'custom-fields', 'page-attributes' ),
 			'icon'     => 'dashicons-format-gallery',
 		),
 	);

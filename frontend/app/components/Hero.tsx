@@ -3,11 +3,23 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import ArtistBioOverlay from "./ArtistBioOverlay";
-import { HERO_STATUS_CARDS } from "./heroStatusData";
+import type {
+  ArtistContent,
+  ContactContent,
+  HeroStatusCard,
+} from "../lib/siteContent";
 import styles from "./Hero.module.css";
 import { navigateToMusicItem, navigateToSection } from "./siteNavigation";
 
-export default function Hero() {
+export default function Hero({
+  artist,
+  contact,
+  heroStatusCards,
+}: {
+  artist: ArtistContent;
+  contact: ContactContent;
+  heroStatusCards: HeroStatusCard[];
+}) {
   const [bioMounted, setBioMounted] = useState(false);
   const bioButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -23,9 +35,9 @@ export default function Hero() {
     <>
       <section id="hero" className={styles.hero}>
         <div className={`page-shell ${styles.identity}`}>
-          <h1 className={styles.wordmark}>Temikaze</h1>
+          <h1 className={styles.wordmark}>{artist.title}</h1>
           <div className={styles.supporting}>
-            <p>DJ & Producer</p>
+            <p>{artist.tagline}</p>
             <button
               ref={bioButtonRef}
               type="button"
@@ -49,10 +61,10 @@ export default function Hero() {
         <div className={styles.imageBand}>
           <div className={styles.imageClip}>
             <Image
-              src="/images/hero.png"
-              alt="Temikaze standing outside The Leadmill music venue at night."
-              width={1254}
-              height={1254}
+              src={artist.heroImage.src}
+              alt={artist.heroImage.alt}
+              width={artist.heroImage.width}
+              height={artist.heroImage.height}
               priority
               sizes="100vw"
               className={styles.image}
@@ -60,7 +72,7 @@ export default function Hero() {
           </div>
 
           <div className={styles.cardStack}>
-            {HERO_STATUS_CARDS.map((card) => (
+            {heroStatusCards.map((card) => (
               <a
                 key={card.eyebrow}
                 href={card.href}
@@ -90,7 +102,13 @@ export default function Hero() {
           </div>
         </div>
       </section>
-      {bioMounted ? <ArtistBioOverlay onClosed={closeBio} /> : null}
+      {bioMounted ? (
+        <ArtistBioOverlay
+          artist={artist}
+          contact={contact}
+          onClosed={closeBio}
+        />
+      ) : null}
     </>
   );
 }

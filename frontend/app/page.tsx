@@ -7,6 +7,7 @@ import SectionHeader, {
   type SectionHeaderEntry,
 } from "./components/SectionHeader";
 import StageVisuals from "./components/StageVisuals";
+import { getSiteContent } from "./lib/wordpress";
 import styles from "./page.module.css";
 
 // The content run's shared editorial header. One entry per section inside the
@@ -28,25 +29,35 @@ const CONTENT_SECTIONS: SectionHeaderEntry[] = [
   { id: "visuals", title: "Visuals" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const content = await getSiteContent();
+
   return (
     <>
-      <Header />
+      <Header
+        artistName={content.artist.title}
+        contact={content.contact}
+        heroStatusCards={content.heroStatusCards}
+      />
       <main>
-        <Hero />
+        <Hero
+          artist={content.artist}
+          contact={content.contact}
+          heroStatusCards={content.heroStatusCards}
+        />
 
         {/* The content run bounds the shared sticky header: it takes over at
             Music, follows through the sections below, and releases at the end
             of the run rather than sticking for the whole page. */}
         <div className={styles.contentRun} data-content-run>
           <SectionHeader sections={CONTENT_SECTIONS} />
-          <Music />
-          <StageVisuals />
+          <Music items={content.musicItems} />
+          <StageVisuals items={content.galleryItems} />
         </div>
 
         {/* Outside the content run on purpose — see the note on
             CONTENT_SECTIONS above. */}
-        <BookingContact />
+        <BookingContact contact={content.contact} />
       </main>
       {/* Renders nothing; drives the scroll-direction visibility of the
           primary navigation through one attribute on the document element. */}

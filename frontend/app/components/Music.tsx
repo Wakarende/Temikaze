@@ -10,7 +10,7 @@ import {
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { MUSIC_ITEMS } from "./musicData";
+import type { MusicItem } from "../lib/siteContent";
 import {
   MUSIC_ITEM_NAVIGATION_EVENT,
   type MusicItemNavigationDetail,
@@ -112,7 +112,7 @@ const releasePreview = (player: HTMLAudioElement) => {
   player.load();
 };
 
-export default function Music() {
+export default function Music({ items }: { items: MusicItem[] }) {
   const pinStageRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLUListElement>(null);
@@ -167,7 +167,7 @@ export default function Music() {
 
   const preparePreviews = useCallback(() => {
     if (previewPlayersRef.current.length === 0) {
-      previewPlayersRef.current = MUSIC_ITEMS.map((item) => {
+      previewPlayersRef.current = items.map((item) => {
         const player = new Audio(item.preview);
         player.preload = "auto";
         player.loop = true;
@@ -187,7 +187,7 @@ export default function Music() {
     }
 
     return previewPlayersRef.current;
-  }, []);
+  }, [items]);
 
   const crossfadeTo = useCallback(
     (nextIndex: number, withVinylDust = false) => {
@@ -349,7 +349,7 @@ export default function Music() {
 
     const getRequestedIndex = (event: Event) => {
       const { itemId } = (event as CustomEvent<MusicItemNavigationDetail>).detail;
-      return MUSIC_ITEMS.findIndex((item) => item.id === itemId);
+      return items.findIndex((item) => item.id === itemId);
     };
 
     // Desktop writes transforms/opacity directly for every scrub frame. Those
@@ -853,7 +853,7 @@ export default function Music() {
     return () => {
       mm.revert();
     };
-  }, [publishActiveAudioIndex, syncAudioPlayback]);
+  }, [items, publishActiveAudioIndex, syncAudioPlayback]);
 
   return (
     <section id="music" className={styles.music}>
@@ -892,7 +892,7 @@ export default function Music() {
           <div className={styles.ruler} aria-hidden="true" />
           <div className={styles.rulerTicks} ref={rulerTicksRef} aria-hidden="true" />
           <ul className={styles.track} ref={trackRef}>
-            {MUSIC_ITEMS.map((item, index) => {
+            {items.map((item, index) => {
               const viewLabel = item.type === "mix" ? "view mix" : "view release";
 
               return (
@@ -907,7 +907,7 @@ export default function Music() {
                       <div className={styles.artwork}>
                         <Image
                           src={item.artwork}
-                          alt={`${item.title} artwork`}
+                          alt={item.artworkAlt}
                           fill
                           sizes="(min-width: 1024px) 20vw, 60vw"
                         />

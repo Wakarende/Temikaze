@@ -12,8 +12,10 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { LinktreeIcon, MailIcon } from "./BrandIcons";
-import { CONTACT_EMAIL, LINKTREE } from "./contactData";
-import { HERO_STATUS_CARDS } from "./heroStatusData";
+import type {
+  ContactContent,
+  HeroStatusCard,
+} from "../lib/siteContent";
 import styles from "./MobileMenu.module.css";
 
 const NAV_LINKS = [
@@ -26,8 +28,14 @@ const revealDelay = (delay: number) =>
   ({ "--menu-delay": `${delay}ms` }) as CSSProperties;
 
 export default function MobileMenu({
+  artistName,
+  contact,
+  heroStatusCards,
   onClosed,
 }: {
+  artistName: string;
+  contact: ContactContent;
+  heroStatusCards: HeroStatusCard[];
   onClosed: (navigationTarget?: string, musicItemId?: string) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -174,7 +182,7 @@ export default function MobileMenu({
             style={revealDelay(360)}
             onClick={(event) => navigate(event, "#hero")}
           >
-            temikaze
+            {artistName.toLowerCase()}
           </a>
           <span className={styles.reveal} style={revealDelay(390)}>
             <button
@@ -219,7 +227,7 @@ export default function MobileMenu({
         </nav>
 
         <div className={styles.statusList} aria-label="Latest music">
-          {HERO_STATUS_CARDS.map((card, index) => (
+          {heroStatusCards.map((card, index) => (
             <a
               key={card.eyebrow}
               href={card.href}
@@ -251,17 +259,17 @@ export default function MobileMenu({
           style={revealDelay(980)}
         >
           <a
-            href={LINKTREE.href}
+            href={contact.linktree.href}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.utilityPill}
           >
             <LinktreeIcon className={styles.utilityIcon} />
-            <span>{LINKTREE.label}</span>
+            <span>{contact.linktree.label}</span>
           </a>
-          <a href={`mailto:${CONTACT_EMAIL}`} className={styles.utilityPill}>
+          <a href={`mailto:${contact.email}`} className={styles.utilityPill}>
             <MailIcon className={styles.utilityIcon} />
-            <span>{CONTACT_EMAIL}</span>
+            <span>{contact.email}</span>
           </a>
         </div>
       </div>

@@ -3,6 +3,10 @@
 import { type MouseEvent, useRef, useState } from "react";
 import styles from "./Header.module.css";
 import MobileMenu from "./MobileMenu";
+import type {
+  ContactContent,
+  HeroStatusCard,
+} from "../lib/siteContent";
 import {
   ARTIST_BIO_NAVIGATION_EVENT,
   navigateToMusicItem,
@@ -15,7 +19,15 @@ const NAV_LINKS = [
   { href: "#booking", label: "booking" },
 ];
 
-export default function Header() {
+export default function Header({
+  artistName,
+  contact,
+  heroStatusCards,
+}: {
+  artistName: string;
+  contact: ContactContent;
+  heroStatusCards: HeroStatusCard[];
+}) {
   const [menuMounted, setMenuMounted] = useState(false);
   const [menuPress, setMenuPress] = useState(0);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -71,7 +83,7 @@ export default function Header() {
             className={styles.wordmark}
             onClick={(event) => navigate(event, "#hero")}
           >
-            Temikaze
+            {artistName}
           </a>
           <nav className={styles.nav} aria-label="Primary">
             <ul className={styles.navList}>
@@ -111,7 +123,14 @@ export default function Header() {
           </button>
         </div>
       </header>
-      {menuMounted ? <MobileMenu onClosed={finishMenuClose} /> : null}
+      {menuMounted ? (
+        <MobileMenu
+          artistName={artistName}
+          contact={contact}
+          heroStatusCards={heroStatusCards}
+          onClosed={finishMenuClose}
+        />
+      ) : null}
     </>
   );
 }

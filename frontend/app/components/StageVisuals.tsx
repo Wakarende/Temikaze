@@ -3,8 +3,8 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
+import type { GalleryItem } from "../lib/siteContent";
 import styles from "./StageVisuals.module.css";
-import { GALLERY_ITEMS } from "./galleryData";
 
 // ---------------------------------------------------------------------------
 // Settled-state geometry, measured off the reference VISUAL section
@@ -25,8 +25,6 @@ const GAP_RATIO = 0.04;
 // index at which a slot wraps to the far side sits well outside the viewport.
 // Nothing "resets" visibly because the wrap happens off-screen.
 const REPEATS = 3;
-const TOTAL_SLOTS = GALLERY_ITEMS.length * REPEATS;
-const HALF_SLOTS = TOTAL_SLOTS / 2;
 
 const NAV_DURATION = 0.5;
 const NAV_EASE = "power3.out";
@@ -91,7 +89,10 @@ function Pill({
   );
 }
 
-export default function StageVisuals() {
+export default function StageVisuals({ items }: { items: GalleryItem[] }) {
+  const itemCount = items.length;
+  const totalSlots = itemCount * REPEATS;
+  const halfSlots = totalSlots / 2;
   const viewportRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const slotRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -146,9 +147,9 @@ export default function StageVisuals() {
     // it out of the tab order and off the compositor.
     const cullDistance = viewportW / 2 + boxW;
 
-    const centre = position.current + GALLERY_ITEMS.length; // middle repeat
+    const centre = position.current + itemCount; // middle repeat
 
-    for (let slot = 0; slot < TOTAL_SLOTS; slot++) {
+    for (let slot = 0; slot < totalSlots; slot++) {
       const el = slotRefs.current[slot];
       if (!el) continue;
 
@@ -156,7 +157,9 @@ export default function StageVisuals() {
       // [-HALF_SLOTS, HALF_SLOTS). Slots crossing that boundary jump, but the
       // boundary is many slots outside the viewport, so it is never seen.
       let d = slot - centre;
-      d = (((d + HALF_SLOTS) % TOTAL_SLOTS) + TOTAL_SLOTS) % TOTAL_SLOTS - HALF_SLOTS;
+      d =
+        (((d + halfSlots) % totalSlots) + totalSlots) % totalSlots -
+        halfSlots;
 
       const dist = Math.abs(d);
       const t = dist < 1 ? dist : 1;
@@ -184,7 +187,7 @@ export default function StageVisuals() {
       el.style.visibility =
         opacity < 0.02 || Math.abs(offsetX) > cullDistance ? "hidden" : "visible";
     }
-  }, []);
+  }, [halfSlots, itemCount, totalSlots]);
 
   // -------------------------------------------------------------------------
   // Measurement. The gallery sits in normal document flow and starts settled —
@@ -229,10 +232,9 @@ export default function StageVisuals() {
         });
       }
 
-      const count = GALLERY_ITEMS.length;
-      setActiveIndex(((target % count) + count) % count);
+      setActiveIndex(((target % itemCount) + itemCount) % itemCount);
     },
-    [render]
+    [itemCount, render]
   );
 
   const goNext = useCallback(() => goTo(targetIndex.current + 1), [goTo]);
@@ -242,15 +244,14 @@ export default function StageVisuals() {
   // click never sends the row the long way round.
   const goToItem = useCallback(
     (itemIndex: number) => {
-      const count = GALLERY_ITEMS.length;
       const current = targetIndex.current;
-      const currentItem = ((current % count) + count) % count;
+      const currentItem = ((current % itemCount) + itemCount) % itemCount;
       let delta = itemIndex - currentItem;
-      if (delta > count / 2) delta -= count;
-      if (delta < -count / 2) delta += count;
+      if (delta > itemCount / 2) delta -= itemCount;
+      if (delta < -itemCount / 2) delta += itemCount;
       goTo(current + delta);
     },
-    [goTo]
+    [goTo, itemCount]
   );
 
   // Arrow keys are bound to the gallery region, not to window/document, so
@@ -307,10 +308,10 @@ export default function StageVisuals() {
         <div ref={measureRef} className={styles.measure} aria-hidden="true" />
 
         <ul className={styles.track} data-ready={ready ? "true" : "false"}>
-          {Array.from({ length: TOTAL_SLOTS }, (_, slot) => {
-            const itemIndex = slot % GALLERY_ITEMS.length;
-            const item = GALLERY_ITEMS[itemIndex];
-            const repeat = Math.floor(slot / GALLERY_ITEMS.length);
+          {Array.from({ length: totalSlots }, (_, slot) => {
+            const itemIndex = slot % itemCount;
+            const item = items[itemIndex];
+            const repeat = Math.floor(slot / itemCount);
             const isActive = itemIndex === activeIndex;
             return (
               <li
@@ -337,7 +338,7 @@ export default function StageVisuals() {
                     fill
                     sizes="(min-width: 1024px) 30vw, 80vw"
                     className={styles.image}
-                    priority={slot === GALLERY_ITEMS.length}
+                    priority={slot === itemCount}
                   />
                 </button>
               </li>

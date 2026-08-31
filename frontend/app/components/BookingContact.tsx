@@ -15,8 +15,8 @@ import {
   TikTokIcon,
   YouTubeIcon,
 } from "./BrandIcons";
+import type { ContactContent } from "../lib/siteContent";
 import styles from "./BookingContact.module.css";
-import { CONTACT_EMAIL, LINKTREE, SOCIAL_LINKS } from "./contactData";
 
 const SOCIAL_ICONS: Record<string, ComponentType<{ className?: string }>> =
   {
@@ -184,8 +184,10 @@ function Signature() {
 }
 
 export default function BookingContact({
+  contact,
   sectionId = "booking",
 }: {
+  contact: ContactContent;
   sectionId?: string | null;
 }) {
   return (
@@ -203,8 +205,8 @@ export default function BookingContact({
         <div className={styles.primaryRow}>
           <span className={styles.rule} aria-hidden="true" />
           <LinkPill
-            href={LINKTREE.href}
-            label={LINKTREE.label}
+            href={contact.linktree.href}
+            label={contact.linktree.label}
             icon={LinktreeIcon}
             className={styles.primaryPill}
           />
@@ -213,7 +215,7 @@ export default function BookingContact({
 
         <div className={styles.footerDirectory}>
           <ul className={styles.socials}>
-            {SOCIAL_LINKS.map((link) => (
+            {contact.socialLinks.map((link) => (
               <li key={link.id}>
                 <LinkPill
                   href={link.href}
@@ -227,8 +229,8 @@ export default function BookingContact({
           <div className={styles.contactRow}>
             <span className={styles.contactLabel}>Contact:</span>
             <LinkPill
-              href={`mailto:${CONTACT_EMAIL}`}
-              label={CONTACT_EMAIL}
+              href={`mailto:${contact.email}`}
+              label={contact.email}
               icon={MailIcon}
               external={false}
             />

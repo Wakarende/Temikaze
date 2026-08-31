@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - meta_type  register_post_meta() 'type'. Defaults to 'string' if omitted.
  * - sanitize   Callable used both for register_post_meta()'s sanitize_callback
  *              and for sanitizing the value on admin save.
+ * - media_type Intended attachment type: image | audio. Attachment fields only.
  *
  * @return array<string, array<string, array<string, mixed>>>
  */
@@ -52,6 +53,13 @@ function temikaze_cms_get_field_schema() {
 				'input'    => 'textarea',
 				'sanitize' => 'sanitize_textarea_field',
 			),
+			'artist_bio_image_id'   => array(
+				'label'      => 'Artist Bio Image',
+				'input'      => 'attachment',
+				'media_type' => 'image',
+				'meta_type'  => 'integer',
+				'sanitize'   => 'absint',
+			),
 			'booking_email'         => array(
 				'label'    => 'Booking Email',
 				'input'    => 'email',
@@ -82,16 +90,22 @@ function temikaze_cms_get_field_schema() {
 				'input'    => 'url',
 				'sanitize' => 'esc_url_raw',
 			),
+			'soundcloud_url'         => array(
+				'label'    => 'SoundCloud URL',
+				'input'    => 'url',
+				'sanitize' => 'esc_url_raw',
+			),
 			'tg_frenz_url'           => array(
 				'label'    => 'TG & fRenz URL',
 				'input'    => 'url',
 				'sanitize' => 'esc_url_raw',
 			),
 			'tg_frenz_logo_id'       => array(
-				'label'     => 'TG & fRenz Logo',
-				'input'     => 'attachment',
-				'meta_type' => 'integer',
-				'sanitize'  => 'absint',
+				'label'      => 'TG & fRenz Logo',
+				'input'      => 'attachment',
+				'media_type' => 'image',
+				'meta_type'  => 'integer',
+				'sanitize'   => 'absint',
 			),
 		),
 		'releases'        => array(
@@ -109,6 +123,18 @@ function temikaze_cms_get_field_schema() {
 				'label'    => 'Genre',
 				'input'    => 'text',
 				'sanitize' => 'sanitize_text_field',
+			),
+			'preview_audio_id'       => array(
+				'label'      => 'Preview Audio',
+				'input'      => 'attachment',
+				'media_type' => 'audio',
+				'meta_type'  => 'integer',
+				'sanitize'   => 'absint',
+			),
+			'external_url'           => array(
+				'label'    => 'Primary External URL',
+				'input'    => 'url',
+				'sanitize' => 'esc_url_raw',
 			),
 			'spotify_url'            => array(
 				'label'    => 'Spotify URL',
@@ -131,6 +157,18 @@ function temikaze_cms_get_field_schema() {
 				'label'    => 'Publish Date',
 				'input'    => 'date',
 				'sanitize' => 'sanitize_text_field',
+			),
+			'preview_audio_id'       => array(
+				'label'      => 'Preview Audio',
+				'input'      => 'attachment',
+				'media_type' => 'audio',
+				'meta_type'  => 'integer',
+				'sanitize'   => 'absint',
+			),
+			'external_url'           => array(
+				'label'    => 'Primary External URL',
+				'input'    => 'url',
+				'sanitize' => 'esc_url_raw',
 			),
 			'youtube_url'            => array(
 				'label'    => 'YouTube URL',
