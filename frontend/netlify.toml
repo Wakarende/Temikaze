@@ -4,3 +4,6 @@ publish = ".next"
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"
+
+[images]
+remote_images = ['https://artistic-maroon-ox\.84-16-251-118\.cpanel\.site/wp-content/uploads/.*']
