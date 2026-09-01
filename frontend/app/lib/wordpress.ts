@@ -79,7 +79,7 @@ const fetchWordPress = async <T>(
     url.searchParams.set(key, value);
   });
 
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url, { next: { revalidate: 300 } });
   if (!response.ok) {
     const detail = (await response.text()).slice(0, 300);
     throw new Error(
